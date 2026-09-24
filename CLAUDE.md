@@ -9,14 +9,22 @@
 
 ## 0. Start-of-session checklist
 
+**Sessions run in the Claude desktop app (Code tab)** with the working folder set to the parent
+`E:\XAI research` (so the vault is reachable; `/add-dir` isn't available in the desktop app).
+A short pointer `E:\XAI research\CLAUDE.md` sends you here.
+
 1. Read this file fully.
-2. If the vault is accessible, read `SolarPhysX_Vault/00_Project_State/Project State Summary.md`
-   and the top 3 entries of `00_Project_State/Changelog.md`.
-3. Confirm the env works: `conda activate solarphysx` (prompt shows `(solarphysx)`), run from
-   the project root `E:\XAI research\solarphysx`.
-4. Resume from **§9 Immediate next steps**. Don't redo finished work (§7 lists it).
-5. After any significant result/decision/correction, update the vault (§11) and, if the
-   project state changed, this file's §7–§9.
+2. Read `SolarPhysX_Vault/00_Project_State/Project State Summary.md` and the top 3 entries of
+   `00_Project_State/Changelog.md`.
+3. Run project commands from `E:\XAI research\solarphysx`, using the env interpreter directly:
+   `C:\Users\sahil\anaconda3\envs\solarphysx\python.exe -m ...` (your shell tool may not be
+   PowerShell and may not have conda activated; verify the path once with `conda env list`).
+4. **Long GPU runs** (anything beyond a few minutes, e.g. 60-epoch training or seed loops): don't
+   block on them in a tool call. Either run them in the background and poll the output, or give
+   Sahil the exact PowerShell command to run in his VS Code terminal and wait for his results.
+5. Resume from **§9 Immediate next steps**. Don't redo finished work (§7 lists it).
+6. After any significant result/decision/correction, update the vault (§11) and, if the
+   project state changed, this file's §7–§9. Commit and push code/results changes.
 
 ---
 
@@ -161,7 +169,9 @@ We are ahead of plan: E1 and most of E2 done in week 2.
 ## 3. Environment
 
 - Project root: `E:\XAI research\solarphysx` (git initialised; `.gitignore`: `/data/`,
-  `__pycache__/`, `*.parquet`, `.ipynb_checkpoints/`, `/models/`).
+  `__pycache__/`, `*.parquet`, `.ipynb_checkpoints/`, `/models/`). **Remote:** private repo
+  `solarphysx` on Sahil's **personal** GitHub (branch `main`); commit identity is his personal
+  Gmail. Commit and push after each significant result.
 - Conda: `C:\Users\sahil\anaconda3`, env **`solarphysx`** (Python 3.11). Packages: torch (CUDA
   build), pandas, pyarrow, numpy, pvlib, shap, scikit-learn, matplotlib, jupyter, ipykernel.
 - VS Code: interpreter = solarphysx env; `.vscode/settings.json` sets terminal cwd to workspace,
