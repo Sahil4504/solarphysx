@@ -1,0 +1,29 @@
+{
+  "plant": "1",
+  "split": "random",
+  "seed": 0,
+  "records": 68774,
+  "windows": 67564,
+  "n_train": 47294,
+  "n_val": 6756,
+  "n_test": 13514,
+  "neighbour_leak_share": 0.9088352819298505,
+  "epochs_run": 60,
+  "best_val_mse": 0.012971210293471813,
+  "units": "z-scored per inverter (as paper Table 5)",
+  "model": {
+    "mae": 0.05901610106229782,
+    "rmse": 0.11675403267145157,
+    "r2": 0.9864665865898132
+  },
+  "persistence": {
+    "mae": 0.3286988139152527,
+    "rmse": 0.5643765926361084,
+    "r2": 0.6837716102600098
+  },
+  "day_shuffled": {
+    "mae": 0.17893856763839722,
+    "rmse": 0.3580862879753113,
+    "r2": 0.872697114944458
+  }
+}

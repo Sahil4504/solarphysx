@@ -1,0 +1,29 @@
+{
+  "plant": "2",
+  "split": "chrono",
+  "seed": 0,
+  "records": 67698,
+  "windows": 66488,
+  "n_train": 44950,
+  "n_val": 4730,
+  "n_test": 11924,
+  "neighbour_leak_share": 0.0017611539751761153,
+  "epochs_run": 9,
+  "best_val_mse": 0.27752482891082764,
+  "units": "z-scored per inverter (as paper Table 5)",
+  "model": {
+    "mae": 0.3731129765510559,
+    "rmse": 0.6200547218322754,
+    "r2": 0.4343189001083374
+  },
+  "persistence": {
+    "mae": 0.32608896493911743,
+    "rmse": 0.5664141178131104,
+    "r2": 0.5279589891433716
+  },
+  "day_shuffled": {
+    "mae": 0.36425158381462097,
+    "rmse": 0.6107892990112305,
+    "r2": 0.45109838247299194
+  }
+}
