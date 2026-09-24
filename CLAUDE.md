@@ -1,7 +1,7 @@
 # CLAUDE.md — SolarPhysX (read fully before doing anything)
 
 > Auto-loaded by Claude Code at session start. This is the complete project handoff as of
-> **2026-09-22 (Tuesday)**. The Obsidian vault at `E:\XAI research\SolarPhysX_Vault` is the
+> **2026-09-23 (Wednesday)**. The Obsidian vault at `E:\XAI research\SolarPhysX_Vault` is the
 > living record; this file is the self-contained snapshot. If they disagree, the vault's
 > `00_Project_State/Changelog.md` (newest entries) wins, and this file should be updated.
 
@@ -38,11 +38,11 @@ A short pointer `E:\XAI research\CLAUDE.md` sends you here.
   → physics-derived features → beats a benchmark → ablation isolating what carries the result.
   Past vault for that paper: `D:\PowerFaultDetection_Vault`.
 - **Next advisor meeting: Thursday 2026-09-24.** Goal: show credible results (E1 robust, E2
-  preliminary, EDA/cleaning findings) and get decisions (§10).
+  settled on Kaggle, EDA/cleaning findings) and get decisions (§10).
 - **Timeline:** ~13 weeks to **submission** (target ≈ 2026-12-14); review adds 3–6 months.
 - **Hardware:** Acer Predator Helios Neo 16 laptop, Windows, **RTX 4060 Laptop GPU (8 GB)** —
-  the only machine; runs code, vault, training. Keep it plugged in, PredatorSense Performance
-  mode, sleep disabled during long runs.
+  the only machine; runs code, vault, training. Keep it plugged in, **PredatorSense Balanced
+  mode (NOT Performance — it causes GPU driver resets, see §5)**, sleep disabled during long runs.
 
 ---
 
@@ -148,7 +148,7 @@ attributing level? · RQ5 can a runtime gate cut false explanations, at what cov
 | ID | Experiment | Status |
 |---|---|---|
 | E1 | SolarTrans random vs chronological split (RQ1, W1/W2) | ✅ robust; rolling origin mostly done |
-| E2 | Feature ablation calendar / nocal / physics, chronological (RQ2) | 🟨 19/24 runs; direction positive on P2, not yet significant |
+| E2 | Feature ablation calendar / nocal / physics, chronological (RQ2) | ✅ on Kaggle: P2 dropping calendar helps (p ≈ 0.03, n=5); physics ≈ nocal → DKASC |
 | E3 | Ramp detection F1 / CSI — the **primary accuracy claim** (aggregate RMSE and ramp skill decouple, Nouri et al. 2024) | ⬜ |
 | E4 | Delta vs level attribution — **GO/NO-GO: if they agree, XAI-2 is void. Run early.** | ⬜ |
 | E5 | PCS audit of baseline explanations (Algorithm 1 ground truth) — needs Flan-T5 retrain | ⬜ |
@@ -290,18 +290,24 @@ Each JSON stores: config, test_period, counts, neighbour_leak_share, per-epoch v
 `model`, `persistence` (repeat last observed DC over the horizon), `day_shuffled` (only if `day`
 is an input). All metrics are in **z-scored units** (as the paper's Table 5).
 
-**Figures from `summarize_e1`:** `e1_summary.png` (paper vs random vs chrono R², skill, day
+**`summarize_e1` also writes `e2_paired.csv`** (each feature set vs calendar, paired by seed:
+diff mean/std, n positive, paired t, p). **Figures:** `e1_summary.png` (paper vs random vs chrono R², skill, day
 reliance — unclipped E1 runs, tag ""), `e1_test_curves.png` (per-epoch test R², calendar @ 0.7),
 `e1_rolling_origin.png` and `e2_features.png` (clipped runs only, so one protocol).
 
 **Known issues and how they were handled (don't rediscover):**
-- Some GPU runs went to **nan in epoch 1** (never on CPU; inputs verified NaN-free). Gradient
-  clipping (`--clip 1.0`) did NOT fix all of them → the cause is most likely the
-  `nn.TransformerEncoder` **eval-mode fast path**, now disabled via
-  `torch.backends.mha.set_fastpath_enabled(False)` (same maths). The script now aborts on
-  non-finite loss, saves nothing, and says whether **TRAINING** diverged (→ retry `--clip 0.5`)
-  or **EVALUATION** produced nan (→ investigate). ⚠️ The fast-path fix is **unverified on the
-  GPU**; 5 runs still fail (§9).
+- **GPU nan/crash runs — SOLVED 2026-09-23.** Root cause was hardware/driver, not the code:
+  Windows **TDR GPU driver resets** (`nvlddmkm` event 153 in the System log, present since July
+  2026) caused by **PredatorSense Performance mode**. Symptoms: `CUDA error: illegal memory
+  access` / `unknown error` (all running CUDA processes die at once), and silent training nans
+  with no reset (same seed trains fine on retry). Balanced mode → 0 resets, 0 nans in a 15-min
+  stress test + 2 full runs (before: ≈ 1 failure / 5 min). `CUDA_LAUNCH_BLOCKING=1` does NOT
+  help. If failures return: check the event log for event 153 at the crash time; next steps
+  would be MUX → discrete GPU, then a clean Studio-driver install. The earlier fixes (fast path
+  disabled, `--clip 1.0`) stay in place as protocol but were not the cure. Failed runs save
+  nothing, so a bash retry loop with `--skip-existing` is safe.
+- Same seed ≠ bit-identical on GPU (non-deterministic kernels): seed 0 epoch-1 test R² varied
+  0.786–0.830 across reruns. State in methods.
 - **Protocol decision:** every E2 and rolling-origin run uses `--clip 1.0` (auto-tagged `_clip`),
   including a re-run of the calendar baseline; finished unclipped E1 runs remain the
   published-protocol reference. Report the clip as a protocol deviation.
@@ -341,24 +347,25 @@ reliance — unclipped E1 runs, tag ""), `e1_test_curves.png` (per-epoch test R�
 ### 6.3 Rolling origin (calendar, clip 1.0, seed 0) — skill per test week
 | Test week | P1 | P2 |
 |---|---|---|
-| 40% origin | missing (fails) | missing (fails) |
+| 40% (1–7 June) | **−0.69** (R² −0.03) | 0.19 |
 | 50% (≈ 4–11 June) | **−0.34** | 0.11 |
 | 60% (≈ 8–14 June) | 0.13 | −0.07 |
-| 70% (11–17 June, E1 means) | 0.24 | −0.12 |
+| 70% (11–17 June; clip means, n=3 / n=5) | 0.22 | −0.12 |
 | Random split | 0.79 | 0.46 |
-→ E1 holds on three test weeks; even clean P1 falls below persistence on 4–11 June. Week-to-week
-variation is large (single seeds).
+→ E1 holds on all four test weeks (honest skill ≤ 0.22 P1 / ≤ 0.19 P2 vs 0.79 / 0.46); clean P1
+falls below persistence on two weeks. Week-to-week variation is large (single seeds).
 
 ### 6.4 E2 — feature ablation (chronological, 70%, clip 1.0)
 | Skill | calendar | nocal | physics |
 |---|---|---|---|
-| **P1** | 0.275 (n=1; E1 unclipped 0.241 ± 0.047, n=3) | 0.246 ± 0.010 (n=3) | 0.244 ± 0.058 (0.187, 0.242, 0.303) |
-| **P2** | −0.134 ± 0.183 (+0.055, −0.146, −0.310) | +0.093 (0.134, 0.051; n=2) | +0.095 ± 0.116 (0.021, 0.228, 0.035) |
-P2 R²: calendar 0.383 → nocal 0.611 → physics 0.609.
-- P1: clear tie.
-- P2: removing the calendar index helps **on average** (+0.23 skill, +0.23 R²) but is **not
-  significant** with n=3 (paired physics−calendar by seed: −0.034, +0.374, +0.345 → t ≈ 1.7,
-  p ≈ 0.2). Needs 5 seeds per condition.
+| **P1** (n=3) | 0.224 ± 0.049 | 0.246 ± 0.010 | 0.244 ± 0.058 |
+| **P2** (n=5) | −0.117 ± 0.147 | +0.098 ± 0.031 | +0.101 ± 0.086 |
+P2 R²: calendar 0.403 → nocal 0.616 → physics 0.615. P1 R²: 0.806 / 0.817 / 0.815.
+- P1: clear tie (paired p = 0.48 / 0.74).
+- P2: removing the calendar index helps: vs calendar, nocal +0.215 skill (**5/5 seeds**, paired
+  t = 3.31, **p = 0.030**), physics +0.217 (4/5, t = 2.92, **p = 0.043**); R² p = 0.037 / 0.046.
+  Unadjusted; Bonferroni ×2 → 0.06 / 0.09. Wording: "consistent improvement, p < 0.05
+  unadjusted, n = 5". It also stabilises P2 (skill std 0.147 → 0.031 for nocal).
 - Physics ≈ nocal on 34 days because `hour` already encodes the sun path when it barely changes
   between days → the value of physics features must be tested on **DKASC (multi-season)**. This
   is a scientific argument for DKASC, not just generalisation.
@@ -371,7 +378,7 @@ P2 R²: calendar 0.383 → nocal 0.611 → physics 0.609.
 | Leakage inflates accuracy; skill collapses (E1) | ✅ robust (3 seeds, 3 test weeks, under-training ruled out) |
 | Day-of-month importance is a leakage artifact (W2) | ✅ |
 | Leakage hides seed instability | ✅ |
-| Removing calendar helps P2 (E2) | 🟨 positive direction, not significant |
+| Removing calendar helps P2 (E2) | ✅ 5/5 seeds, p = 0.03 (unadjusted; n = 5) |
 | Physics features beat hour of day | ❌ not on 34 days; needs DKASC |
 
 ---
@@ -380,8 +387,9 @@ P2 R²: calendar 0.383 → nocal 0.611 → physics 0.609.
 Env + VS Code set up · loader + numeric audit · visual EDA (8-cell notebook) · cleaning + fault
 flag (visually validated) · SolarTrans replica · E1 (random/chrono, 3 chrono seeds, 2 random,
 full60, oracle bound, day shuffle) · plant location fit + physics features (visually checked) ·
-feature sets + rolling-origin split (self-check) · E2 19/24 runs · rolling origin 50/60/70% ·
-vault with notes per experiment · W1–W3 audit from the paper text.
+feature sets + rolling-origin split (self-check) · E2 complete (P2 5 seeds, P1 3 seeds, paired
+test) · rolling origin 40/50/60/70% · GPU crash root cause (Balanced mode) · vault with notes per
+experiment · W1–W3 audit from the paper text.
 
 ## 8. Not started
 E3 ramp F1/CSI · E4 delta vs level attribution (GO/NO-GO) · E5 PCS audit (needs Algorithm 1
@@ -390,31 +398,13 @@ on cleaned data (valid-rows protocol, train-only scaler, windows skipping invali
 comparison layer · Gradio interface · paper writing · ramp-event count (statistical power).
 
 ## 9. Immediate next steps (in order)
-1. **Diagnose the 5 failing runs** (P1 calendar-clip s0 and s2; P2 nocal s2; both 40% origins).
-   Run each alone and read the last lines (TRAINING vs EVALUATION):
-   ```powershell
-   python -m src.experiments.e1_leakage --plant 1 --split chrono --train-frac 0.4 --clip 1.0 --skip-existing
-   python -m src.experiments.e1_leakage --plant 1 --split chrono --seed 0 --clip 1.0 --skip-existing
-   python -m src.experiments.e1_leakage --plant 1 --split chrono --seed 2 --clip 1.0 --skip-existing
-   python -m src.experiments.e1_leakage --plant 2 --split chrono --features nocal --seed 2 --clip 1.0 --skip-existing
-   python -m src.experiments.e1_leakage --plant 2 --split chrono --train-frac 0.4 --clip 1.0 --skip-existing
-   ```
-   TRAINING → retry with `--clip 0.5`. EVALUATION → the fast-path fix didn't work; investigate
-   (e.g. check `torch.__version__`, run `predict` with the model in train mode + `torch.no_grad`,
-   or evaluate on CPU). Keep fixes minimal and protocol-neutral.
-2. **Settle E2 on Plant 2:** seeds 3–4 for all three feature sets, then summarise:
-   ```powershell
-   foreach ($s in 3,4) { foreach ($f in "calendar","nocal","physics") {
-       python -m src.experiments.e1_leakage --plant 2 --split chrono --features $f --seed $s --clip 1.0 --skip-existing
-   } }
-   python -m src.experiments.summarize_e1
-   ```
-   Report mean ± std and a paired test by seed; keep claims to what the stats support.
-3. **Meeting prep (Wednesday):** condensed 1–2 page Word brief (Sahil prefers clean, condensed
+0. **Done 2026-09-23:** the 5 failing runs (GPU driver resets, fixed by Balanced mode, §5) and
+   E2 P2 seeds 3–4 (§6.4). Train only in PredatorSense Balanced mode.
+1. **Meeting prep (Wednesday):** condensed 1–2 page Word brief (Sahil prefers clean, condensed
    Word outputs): figures `e1_summary.png`, `e1_test_curves.png`, `e1_rolling_origin.png`,
    `e2_features.png`; the §6.5 table; the questions in §10. Optionally update the proposal and
    meeting script wording (W3 = three violations; ROUGE 0.7889 is an aggregate; no live demo).
-4. **After the meeting:** apply advisor decisions → our pipeline on cleaned data (valid-rows) →
+2. **After the meeting:** apply advisor decisions → our pipeline on cleaned data (valid-rows) →
    **E4 go/no-go early** → DKASC loader + E2 on multi-season data → E5 (Algorithm 1 + Flan-T5).
 
 ## 10. Questions for Prof. Bui (Thursday)

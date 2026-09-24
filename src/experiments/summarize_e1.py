@@ -171,6 +171,29 @@ def plot_features(df: pd.DataFrame) -> None:
     print(f"figure -> {OUT / 'e2_features.png'}")
 
 
+def paired_e2(df: pd.DataFrame) -> pd.DataFrame:
+    """E2 significance: each feature set vs calendar, paired by seed (same split, same clip)."""
+    from scipy.stats import ttest_rel
+    d = df[(df.split == "chrono") & (df.train_frac == 0.7) & (df["clip"] > 0)]
+    rows = []
+    for p, g in d.groupby("plant"):
+        for f in ["nocal", "physics"]:
+            for col in ["skill_vs_persist", "R2"]:
+                w = g.pivot_table(index="seed", columns="features", values=col)
+                if not {"calendar", f} <= set(w.columns):
+                    continue
+                w = w[["calendar", f]].dropna()
+                diff = w[f] - w["calendar"]
+                t, pv = ttest_rel(w[f], w["calendar"]) if len(w) > 1 else (float("nan"),) * 2
+                rows.append({"plant": p, "vs_calendar": f, "metric": col, "n_pairs": len(w),
+                             "seeds": list(w.index), "diff_mean": diff.mean(), "diff_std": diff.std(),
+                             "n_positive": int((diff > 0).sum()), "t": t, "p": pv})
+    out = pd.DataFrame(rows)
+    if len(out):
+        out.round(4).to_csv(OUT / "e2_paired.csv", index=False)
+    return out
+
+
 if __name__ == "__main__":
     df, raw = load()
     pd.set_option("display.width", 250)
@@ -187,3 +210,5 @@ if __name__ == "__main__":
     plot_curves(raw)
     plot_rolling(df)
     plot_features(df)
+    print("\n=== E2 paired by seed (feature set - calendar) ===")
+    print(paired_e2(df).round(4).to_string(index=False))
