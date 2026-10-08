@@ -40,9 +40,11 @@ A short pointer `E:\XAI research\CLAUDE.md` sends you here.
 - **Next advisor meeting: Thursday 2026-09-24.** Goal: show credible results (E1 robust, E2
   settled on Kaggle, EDA/cleaning findings) and get decisions (§10).
 - **Timeline:** ~13 weeks to **submission** (target ≈ 2026-12-14); review adds 3–6 months.
-- **Hardware:** Acer Predator Helios Neo 16 laptop, Windows, **RTX 4060 Laptop GPU (8 GB)** —
-  the only machine; runs code, vault, training. Keep it plugged in, **PredatorSense Balanced
-  mode (NOT Performance — it causes GPU driver resets, see §5)**, sleep disabled during long runs.
+- **Hardware (since 2026-10-08):** new Windows laptop, **RTX 5070 Ti Laptop GPU** (Blackwell, needs a
+  PyTorch build for CUDA 12.8+), Intel Core Ultra 9 290HX+, 32 GB RAM. Project copied over at the same
+  path `E:\XAI research`. Earlier results came from an Acer Predator Helios Neo 16 (RTX 4060 8 GB),
+  where PredatorSense Performance mode caused GPU driver resets (§5). On the new machine: plugged in,
+  sleep disabled during long runs, and confirm stability with one full run before batches.
 
 ---
 
@@ -399,7 +401,7 @@ comparison layer · Gradio interface · paper writing · ramp-event count (stati
 
 ## 9. Immediate next steps (in order)
 0. **Done 2026-09-23:** the 5 failing runs (GPU driver resets, fixed by Balanced mode, §5) and
-   E2 P2 seeds 3–4 (§6.4). Train only in PredatorSense Balanced mode.
+   E2 P2 seeds 3–4 (§6.4). (Old laptop: train only in PredatorSense Balanced mode.)
 1. **Meeting prep (Wednesday):** condensed 1–2 page Word brief (Sahil prefers clean, condensed
    Word outputs): figures `e1_summary.png`, `e1_test_curves.png`, `e1_rolling_origin.png`,
    `e2_features.png`; the §6.5 table; the questions in §10. Optionally update the proposal and
