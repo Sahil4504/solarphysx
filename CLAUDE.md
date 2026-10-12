@@ -385,6 +385,20 @@ P2 R²: calendar 0.403 → nocal 0.616 → physics 0.615. P1 R²: 0.806 / 0.817 
 
 ---
 
+### 6b. E3 day-ahead benchmark, DKASC #38 (2026-10-12)
+Issue 18:00 ACST D-1; target next-day hourly AC power 05-19 h; GFS 00 UTC run of D-1 (f15-36) + pvlib physics + measured power up to issue. Train 2021-01..2022-09, val 2022-Q4 (early stopping), test 2023-01..09 (260 days, 2,786 daytime hours). Skill = 1 - RMSE/RMSE_persistence; CI = 1,000 day-bootstrap.
+| model | RMSE kW | nRMSE % | skill [95% CI] |
+|---|---|---|---|
+| B physics + LightGBM residual | 0.512 | 8.7 | 0.40 [0.30, 0.49] |
+| A LightGBM quantile (80% cov 73%) | 0.525 | 8.9 | 0.39 [0.28, 0.48] |
+| D SolarTrans + physics inputs (3 seeds) | 0.526 | 8.9 | 0.38 +- 0.004 |
+| pvlib physical (derate 0.92 only) | 0.568 | 9.6 | 0.33 [0.22, 0.43] |
+| C TFT (pytorch-forecasting, defaults, 3 seeds) | 0.580 | 9.8 | 0.32 +- 0.02 (80% cov 71%) |
+| SolarTrans original inputs (calendar, no NWP) | 0.744 | 12.6 | 0.13 |
+| smart persistence | 0.804 | 13.6 | 0.06 |
+| persistence | 0.853 | 14.5 | 0 |
+Paired bootstrap vs B: A worse by 0.002-0.023 kW (CI excludes 0); D tie (-0.005..0.031); physics, TFT, SolarTrans-orig clearly worse. Bug caught: clear-sky window offset made GFS clearness drift 0.64->1.2 over clear days; fixed, self-check in build_dayahead. Orientation fit: tilt 14.5, azimuth 354.
+
 ## 7. Finished work (do not redo)
 Env + VS Code set up · loader + numeric audit · visual EDA (8-cell notebook) · cleaning + fault
 flag (visually validated) · SolarTrans replica · E1 (random/chrono, 3 chrono seeds, 2 random,
@@ -399,21 +413,29 @@ reimplementation + Flan-T5-Base retrain) · E6 gate + risk–coverage · E7 DKAS
 on cleaned data (valid-rows protocol, train-only scaler, windows skipping invalid rows) · SHAP
 comparison layer · Gradio interface · paper writing · ramp-event count (statistical power).
 
-## 9. Immediate next steps (in order)
-0. **Done 2026-09-23:** the 5 failing runs (GPU driver resets, fixed by Balanced mode, §5) and
-   E2 P2 seeds 3–4 (§6.4). (Old laptop: train only in PredatorSense Balanced mode.)
-1. **Meeting prep (Wednesday):** condensed 1–2 page Word brief (Sahil prefers clean, condensed
-   Word outputs): figures `e1_summary.png`, `e1_test_curves.png`, `e1_rolling_origin.png`,
-   `e2_features.png`; the §6.5 table; the questions in §10. Optionally update the proposal and
-   meeting script wording (W3 = three violations; ROUGE 0.7889 is an aggregate; no live demo).
-2. **After the meeting:** apply advisor decisions → our pipeline on cleaned data (valid-rows) →
-   **E4 go/no-go early** → DKASC loader + E2 on multi-season data → E5 (Algorithm 1 + Flan-T5).
+## 9. Immediate next steps (as of 2026-10-12)
+Done 10-12 (E3 day-ahead benchmark, see §6b): `src/data/clean_dkasc.py`, `src/data/build_dayahead.py`, `src/experiments/dayahead_bench.py`, `plot_dayahead.py`; results in `results/dayahead/`.
+1. Show the professor E3 (fig_skill, fig_example_days, fig_framework); confirm the 18:00 issue time; pick the forecaster (proposal: B physics + ML residual, with A's quantiles for intervals).
+2. Horizon selector 10-24 h: currently one issue time (18:00 -> 11-25 h ahead). Add issue-time / lead-time variants.
+3. Calibrate intervals (80% band covers only 71-73%): conformal or quantile-on-residual.
+4. Tune TFT/D before calling them losers (only defaults so far); second DKASC array for robustness.
+5. Gate: claim schema + T1-T3 checks on B's forecasts; agentic explain-verify-revise loop. Systematic novelty search.
+6. Kaggle critique: P1 nocal@50% and physics@40% unseen-month runs, then seeds 1-2. E4 go/no-go.
+7. Retry 6 GFS failures; commit.
 
-## 10. Questions for Prof. Bui (Thursday)
-Horizon: intra-day (2–8 h) or day-ahead (10–24 h; needs NWP, shifts explanations to forecast
-uncertainty)? · DKASC as a **required** second dataset, pulled earlier? · Keep the LLM layer with a
-verification gate, or verified templates only? · Emphasis: physics verification vs forecast
-accuracy? · Target journal (page limits shape the writing)?
+## 10. Advisor decisions (meeting 2026-09-24)
+**Advisor decisions (meeting 2026-09-24, recorded 2026-10-08):**
+1. **Horizon: day-ahead, 10–24 h**, with a **horizon selector in the GUI** so the operator chooses the forecast window.
+2. **DKASC is compulsory**: it is the differentiator from SolarTrans.
+3. **Explanation layer: our own novel verification gate**, not a copy of an existing method. Prior-art search still required before claiming novelty.
+4. Emphasis: not specified. Working default: verification gate = main contribution; accuracy must beat persistence baselines and SolarTrans.
+5. Journal: undecided; chosen later from results.
+
+**Consequences (2026-10-08):**
+- **Split of roles:** Kaggle (2020, 2 h, no archived weather forecasts) stays the *critique* testbed at SolarTrans's own setting (E1, E2, W3/E5). **Our system (day-ahead + gate) is built and evaluated on DKASC.**
+- **Day-ahead needs weather-forecast (NWP) inputs** issued ≥10 h before the target. Open-Meteo *Historical Forecast* API stitches only the first hours of each run (short lead) → **would leak for day-ahead; don't use it as a day-ahead input**. Open-Meteo *Single Runs* API gives full-horizon past runs: ECMWF IFS HRES 9 km from 2024-03-14 (most other models from 2026-04-02), hourly, GHI/DNI/DHI, cloud cover, temperature. Licence/cost to check. → DKASC evaluation window ≈ 2024-03 onward.
+- **Day-ahead baselines:** 24 h persistence (same time yesterday), smart persistence (clear-sky index), raw NWP GHI → PV, plus a SolarTrans-style transformer at 24 h.
+- **GUI horizon selector:** train one multi-horizon model (up to 24 h ahead) and let the GUI choose the window; explanations computed for the selected window.
 
 ---
 
