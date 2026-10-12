@@ -413,15 +413,13 @@ reimplementation + Flan-T5-Base retrain) · E6 gate + risk–coverage · E7 DKAS
 on cleaned data (valid-rows protocol, train-only scaler, windows skipping invalid rows) · SHAP
 comparison layer · Gradio interface · paper writing · ramp-event count (statistical power).
 
-## 9. Immediate next steps (as of 2026-10-12)
-Done 10-12 (E3 day-ahead benchmark, see §6b): `src/data/clean_dkasc.py`, `src/data/build_dayahead.py`, `src/experiments/dayahead_bench.py`, `plot_dayahead.py`; results in `results/dayahead/`.
-1. Show the professor E3 (fig_skill, fig_example_days, fig_framework); confirm the 18:00 issue time; pick the forecaster (proposal: B physics + ML residual, with A's quantiles for intervals).
-2. Horizon selector 10-24 h: currently one issue time (18:00 -> 11-25 h ahead). Add issue-time / lead-time variants.
-3. Calibrate intervals (80% band covers only 71-73%): conformal or quantile-on-residual.
-4. Tune TFT/D before calling them losers (only defaults so far); second DKASC array for robustness.
-5. Gate: claim schema + T1-T3 checks on B's forecasts; agentic explain-verify-revise loop. Systematic novelty search.
-6. Kaggle critique: P1 nocal@50% and physics@40% unseen-month runs, then seeds 1-2. E4 go/no-go.
-7. Retry 6 GFS failures; commit.
+## 9. Immediate next steps (as of 2026-10-12, after gate v1)
+Confirmed by Sahil 10-12: issue time 18:00 ACST; forecaster = B (physics + LightGBM residual).
+Gate v1: `src/gate/gate.py` (self-check `python -m src.gate.gate`), `src/experiments/gate_eval.py` (~5 min CPU), `plot_gate.py`; results `results/gate/`; summary in vault `04_Experiments/Gate v1 Results.md`.
+1. Close the loop on B: zero output when clear-sky GHI = 0 (T1 dark violations 15% of days) + LightGBM monotone constraints (t2m -, k +) on the residual; re-run gate + benchmark.
+2. Agentic LLM explainer (explain -> verify -> revise) using the gate as critic.
+3. Interval calibration; horizon selector variants; second DKASC array; tune C/D (GPU); gate on D (needs saved model).
+4. Kaggle: read the 2 new unseen-month JSONs, seeds 1-2; E4 go/no-go; systematic novelty search; retry 6 GFS failures.
 
 ## 10. Advisor decisions (meeting 2026-09-24)
 **Advisor decisions (meeting 2026-09-24, recorded 2026-10-08):**

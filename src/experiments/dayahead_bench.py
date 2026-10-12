@@ -53,21 +53,26 @@ def _lgb(X, y, Xv, yv, **kw):
     return m.fit(X, y, eval_set=[(Xv, yv)], callbacks=[lgb.early_stopping(100, verbose=False)])
 
 
-def lightgbm_models(df):
+def lightgbm_models(df, save_preds=True):
+    """Fit A (3 quantiles) and B; returns the fitted models (the gate re-runs them on counterfactual inputs)."""
     d = df.dropna(subset=["y"])
     tr, va = d[d.split == "train"], d[d.split == "val"]
-    preds = {}
+    preds, models = {}, {}
     for q in QS:
         m = _lgb(tr[FEATS], tr.y, va[FEATS], va.y, objective="quantile", alpha=q)
         preds[f"p{int(q * 100)}"] = m.predict(df[FEATS])
+        models[f"A{int(q * 100)}"] = m
     p = pd.DataFrame(preds, index=df.index)
     p[["p10", "p50", "p90"]] = np.sort(p[["p10", "p50", "p90"]].to_numpy(), axis=1)  # no quantile crossing
-    save("A_lgbm_quantile", p)
+    if save_preds:
+        save("A_lgbm_quantile", p)
 
     phys = fit_derate(df) * df.p_phys1
     r = d.y - phys.loc[d.index]
     m = _lgb(tr[FEATS], r.loc[tr.index], va[FEATS], r.loc[va.index], objective="regression")
-    save("B_physics_residual", (phys + m.predict(df[FEATS])).to_frame("p50"))
+    if save_preds:
+        save("B_physics_residual", (phys + m.predict(df[FEATS])).to_frame("p50"))
+    return {**models, "B_resid": m, "derate": fit_derate(df)}
 
 
 # ---------------- C: TFT ----------------
