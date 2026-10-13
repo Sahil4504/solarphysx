@@ -414,10 +414,10 @@ on cleaned data (valid-rows protocol, train-only scaler, windows skipping invali
 comparison layer · Gradio interface · paper writing · ramp-event count (statistical power).
 
 ## 9. Immediate next steps (as of 2026-10-12, after gate v1)
-Confirmed by Sahil 10-12: issue time 18:00 ACST; forecaster = B (physics + LightGBM residual).
+Confirmed by Sahil 10-12: issue time 18:00 ACST; forecaster = B2 (B + night mask + temperature-monotone residual; replaced B the same day).
 Gate v1: `src/gate/gate.py` (self-check `python -m src.gate.gate`), `src/experiments/gate_eval.py` (~5 min CPU), `plot_gate.py`; results `results/gate/`; summary in vault `04_Experiments/Gate v1 Results.md`.
-1. Close the loop on B: zero output when clear-sky GHI = 0 (T1 dark violations 15% of days) + LightGBM monotone constraints (t2m -, k +) on the residual; re-run gate + benchmark.
-2. Agentic LLM explainer (explain -> verify -> revise) using the gate as critic.
+1. DONE 10-12: loop closed. `MONO` in dayahead_bench.py -> B2_physics_constrained (night mask + t2m monotone; skill 0.391 vs B 0.400, CI overlaps; T1 0%; BLOCK days 28.6% -> 1.8%) and B3_fully_monotone (all six; skill 0.348, significantly worse). Sweep: `python -m src.experiments.mono_ablation`. Forecaster = B2 (confirmed by Sahil 10-12). Remaining gate FLAGs = temperature-claim size -> explainer task.
+2. Agent phase 1 DONE 10-12: `src/agent/explainer.py` (--backend template|hf, --every, --rounds, --selfcheck), `src/agent/plot_agent.py`; results `results/agent/`; vault `04_Experiments/Agent Explainer.md`. Full Qwen2.5-3B run done 10-13 (273 days, ~75 min GPU): drafts 54% wrong (CI 49-59%) -> 98% PASS after loop, 654 shown. `python -m src.agent.plot_agent summary` -> fig_agent_summary.png. Run saves per day and resumes; rename hf_* files after code changes. Next: evidence ablation (model-verified effects), second LLM.
 3. Interval calibration; horizon selector variants; second DKASC array; tune C/D (GPU); gate on D (needs saved model).
 4. Kaggle: read the 2 new unseen-month JSONs, seeds 1-2; E4 go/no-go; systematic novelty search; retry 6 GFS failures.
 

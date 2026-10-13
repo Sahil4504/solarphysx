@@ -19,6 +19,10 @@ NWP = ["k", "tcc", "t2m", "ghi_gfs", "poa_gfs", "p_phys1", "p_cs1", "zenith"]  #
 HIST = ["p_lag", "pcs_lag", "kd_lag"]
 FEATS = NWP + ["hour"] + HIST
 QS = [0.1, 0.5, 0.9]
+# Gate T2 fix: the residual must not raise power with hotter air (B2) / must follow every physical direction (B3).
+# All six together cost ~0.05 skill (mono_ablation.py); temperature alone removes most violations for ~0.01.
+MONO = {"B2_physics_constrained": {"t2m": -1},
+        "B3_fully_monotone": {"k": 1, "tcc": -1, "t2m": -1, "ghi_gfs": 1, "poa_gfs": 1, "p_phys1": 1}}
 
 
 def load():
@@ -72,6 +76,13 @@ def lightgbm_models(df, save_preds=True):
     m = _lgb(tr[FEATS], r.loc[tr.index], va[FEATS], r.loc[va.index], objective="regression")
     if save_preds:
         save("B_physics_residual", (phys + m.predict(df[FEATS])).to_frame("p50"))
+
+    # B2/B3 = B closed by the gate: monotone residual (T2) + zero output when the sun is down (T1 dark)
+    for name, mono in MONO.items():
+        models[name] = _lgb(tr[FEATS], r.loc[tr.index], va[FEATS], r.loc[va.index], objective="regression",
+                            monotone_constraints=[mono.get(f, 0) for f in FEATS])
+        if save_preds:
+            save(name, ((phys + models[name].predict(df[FEATS])) * (df.cs_ghi > 0)).to_frame("p50"))
     return {**models, "B_resid": m, "derate": fit_derate(df)}
 
 

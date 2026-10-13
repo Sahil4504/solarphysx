@@ -13,7 +13,8 @@ from src.experiments.gate_eval import OUT, PRED, daily_error
 INK, MUTED, GRID = "#0B0B0B", "#52514E", "#E6E6E3"
 STATUS = {"PASS": "#0CA30C", "FLAG": "#FAB219", "BLOCK": "#D03B3B"}  # status palette: always paired with a text label
 S1, S2, S3 = "#2A78D6", "#EB6834", "#1BAF7A"  # categorical slots 1-3
-NAME = {"B_physics_residual": "B Physics + ML residual", "A_lgbm_quantile": "A LightGBM quantile",
+NAME = {"B_physics_residual": "B Physics + ML residual", "B2_physics_constrained": "B2 = B + night mask + temp. monotone",
+        "B3_fully_monotone": "B3 = B + night mask + all monotone", "A_lgbm_quantile": "A LightGBM quantile",
         "D_solartrans_physics_s0": "D SolarTrans + physics", "C_tft_s0": "C TFT",
         "solartrans_original_s0": "SolarTrans (original inputs)", "pvlib_physical": "pvlib physical",
         "persistence": "Persistence", "smart_persistence": "Smart persistence", "measured (reality)": "Measured (reality)"}
@@ -29,12 +30,13 @@ def _style(ax):
 
 def checks_figure():
     c = pd.read_csv(OUT / "claims.csv")
-    t1 = pd.read_csv(OUT / "t1_violations_pct_days.csv", index_col=0).t1_fail.sort_values()
+    t1 = pd.read_csv(OUT / "t1_violations_pct_days.csv", index_col=0).t1_fail
+    t1 = t1[t1.index.isin(NAME)].sort_values()  # seed 0 only for the neural models (all seeds are in the csv)
     mono = pd.read_csv(OUT / "t2_monotonicity_pct_hours.csv", index_col=0)
-    fig, axs = plt.subplots(1, 3, figsize=(17, 4.6), gridspec_kw=dict(width_ratios=[1.35, 1, 1]))
+    fig, axs = plt.subplots(1, 3, figsize=(17, 6), gridspec_kw=dict(width_ratios=[1.35, 1, 1]))
 
     ax = axs[0]  # claim verdicts per explainer
-    order = ["A + SHAP", "B + SHAP", "B + physics explainer"]
+    order = ["A + SHAP", "B + SHAP", "B + physics explainer", "B2 + SHAP", "B2 + physics explainer", "B3 + physics explainer"]
     share = pd.crosstab(c.setup, c.verdict, normalize="index").reindex(order)[["PASS", "FLAG", "BLOCK"]] * 100
     n = c.setup.value_counts()
     left = np.zeros(len(order))
@@ -59,7 +61,7 @@ def checks_figure():
     _style(ax)
 
     ax = axs[2]  # T2 model monotonicity
-    m = mono.loc[["pvlib_physical", "A_lgbm_quantile", "B_physics_residual"]]
+    m = mono.loc[["pvlib_physical", "B3_fully_monotone", "B2_physics_constrained", "A_lgbm_quantile", "B_physics_residual"]]
     y = np.arange(len(m))
     ax.barh(y + 0.17, m.clearer_lowers, height=0.32, color=S1, label="clearer sky → LOWER power")
     ax.barh(y - 0.17, m.hotter_raises, height=0.32, color=S2, label="hotter air → HIGHER power")

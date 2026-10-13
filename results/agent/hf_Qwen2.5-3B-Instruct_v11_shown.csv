@@ -1,0 +1,64 @@
+day,window,driver,delta_kwh,sentence,true_kwh,t2,t3,text,verdict
+2023-01-01,morning,cloud,-1.14,"In the morning, cloud lowers output by 1.14 kWh compared with a clear sky.",-1.428,PASS,PASS,ok,PASS
+2023-01-01,midday,temperature,-0.26,"In the midday, temperature lowers output by 0.26 kWh compared with 25°C air.",-0.262,PASS,PASS,ok,PASS
+2023-01-01,afternoon,cloud,-3.18,"In the afternoon, cloud lowers output by 3.18 kWh compared with a clear sky.",-3.506,PASS,PASS,ok,PASS
+2023-01-11,morning,cloud,-0.1,"In the morning, cloud lowers output by 0.10 kWh compared with a clear sky.",-0.27,PASS,PASS,ok,PASS
+2023-01-11,afternoon,cloud,-4.45,"In the afternoon, cloud lowers output by 4.45 kWh compared with a clear sky.",-4.209,PASS,PASS,ok,PASS
+2023-01-21,morning,cloud,-4.51,"In the morning, cloud lowers output by 4.51 kWh compared with a clear sky.",-4.505,PASS,PASS,ok,PASS
+2023-01-21,midday,cloud,-10.67,"In the midday, cloud lowers output by 10.67 kWh compared with a clear sky.",-10.667,PASS,PASS,ok,PASS
+2023-01-21,afternoon,cloud,-5.33,"In the afternoon, cloud lowers output by 5.33 kWh compared with a clear sky.",-5.334,PASS,PASS,ok,PASS
+2023-01-31,morning,cloud,-2.22,"In the morning, cloud lowers output by 2.22 kWh compared with a clear sky.",-1.9,PASS,PASS,ok,PASS
+2023-01-31,midday,cloud,-2.5,"In the midday, cloud lowers output by 2.50 kWh compared with a clear sky.",-2.234,PASS,PASS,ok,PASS
+2023-01-31,afternoon,cloud,-2.16,"In the afternoon, cloud lowers output by 2.16 kWh compared with a clear sky.",-2.211,PASS,PASS,ok,PASS
+2023-02-10,afternoon,cloud,0.29,"In the afternoon, cloud raises output by 0.29 kWh compared with a clear sky.",0.255,PASS,PASS,ok,PASS
+2023-02-20,morning,cloud,-0.14,"In the morning, cloud lowers output by 0.14 kWh compared with a clear sky.",-0.122,PASS,PASS,ok,PASS
+2023-02-20,midday,temperature,-0.48,"In the midday, temperature lowers output by 0.48 kWh compared with 25°C air.",-0.476,PASS,PASS,ok,PASS
+2023-02-20,afternoon,ml_correction,-1.05,"In the afternoon, the machine learning correction lowers output by 1.05 kWh compared with physics estimates.",-1.05,PASS,PASS,ok,PASS
+2023-03-02,morning,cloud,-1.28,"In the morning, cloud lowers output by 1.28 kWh compared with a clear sky.",-1.282,PASS,PASS,ok,PASS
+2023-03-02,midday,cloud,-3.74,"In the midday, cloud lowers output by 3.74 kWh compared with a clear sky.",-3.74,PASS,PASS,ok,PASS
+2023-03-02,afternoon,cloud,-1.88,"In the afternoon, cloud lowers output by 1.88 kWh compared with a clear sky.",-1.88,PASS,PASS,ok,PASS
+2023-03-12,morning,cloud,0.14,"In the morning, cloud raises output by 0.14 kWh compared with a clear sky.",0.124,PASS,PASS,ok,PASS
+2023-03-12,midday,temperature,-0.77,"In the midday, temperature lowers output by 0.77 kWh compared with 25 C air.",-0.817,PASS,PASS,ok,PASS
+2023-03-12,afternoon,ml_correction,-0.43,"In the afternoon, ml_correction lowers output by 0.43 kWh compared with physics estimates.",-0.43,PASS,PASS,ok,PASS
+2023-03-22,morning,temperature,-0.16,"In the morning, temperature lowers output by 0.16 kWh compared with 25°C air.",-0.172,PASS,PASS,ok,PASS
+2023-03-22,midday,temperature,-0.79,"In the midday, temperature lowers output by 0.79 kWh compared with 25°C air.",-0.845,PASS,PASS,ok,PASS
+2023-03-22,afternoon,cloud,0.42,"In the afternoon, cloud raises output by 0.42 kWh compared with a clear sky.",0.37,PASS,PASS,ok,PASS
+2023-04-01,morning,cloud,-2.8,"In the morning, cloud lowers output by 2.80 kWh compared with a clear sky.",-2.623,PASS,PASS,ok,PASS
+2023-04-01,midday,cloud,-7.47,"In the midday, cloud lowers output by 7.47 kWh compared with a clear sky.",-7.475,PASS,PASS,ok,PASS
+2023-04-01,afternoon,cloud,-3.6,"In the afternoon, cloud lowers output by 3.60 kWh compared with a clear sky.",-4.384,PASS,PASS,ok,PASS
+2023-04-11,morning,cloud,-1.15,"In the morning, cloud lowers output by 1.15 kWh compared with a clear sky.",-1.36,PASS,PASS,ok,PASS
+2023-04-11,midday,cloud,-1.9,"In the midday, cloud lowers output by 1.90 kWh compared with a clear sky.",-2.116,PASS,PASS,ok,PASS
+2023-04-11,afternoon,cloud,-0.75,"In the afternoon, cloud lowers output by 0.75 kWh compared with a clear sky.",-0.789,PASS,PASS,ok,PASS
+2023-04-21,morning,cloud,-0.44,"In the morning, cloud lowers output by 0.44 kWh compared with a clear sky.",-0.437,PASS,PASS,ok,PASS
+2023-04-21,midday,cloud,-0.89,"In the midday, cloud lowers output by 0.89 kWh compared with a clear sky.",-0.887,PASS,PASS,ok,PASS
+2023-04-21,afternoon,ml_correction,-0.16,"In the afternoon, machine learning correction lowers output by 0.16 kWh compared with physics estimates.",-0.16,PASS,PASS,ok,PASS
+2023-05-01,morning,cloud,-0.87,"In the morning, cloud lowers output by 0.87 kWh compared with a clear sky.",-1.027,PASS,PASS,ok,PASS
+2023-05-01,midday,temperature,0.35,"In the midday, temperature raises output by 0.35 kWh compared with 25°C air.",0.539,PASS,PASS,ok,PASS
+2023-05-01,afternoon,ml_correction,0.15,"In the afternoon, ml_correction raises output by 0.15 kWh compared with physics estimates.",0.15,PASS,PASS,ok,PASS
+2023-05-11,midday,cloud,0.27,"In the midday, cloud raises output by 0.27 kWh compared with a clear sky.",0.273,PASS,PASS,ok,PASS
+2023-05-21,afternoon,ml_correction,0.83,"In the afternoon, ml_correction raises output by 0.83 kWh compared with physics estimates.",0.83,PASS,PASS,ok,PASS
+2023-05-31,midday,temperature,0.41,"In the midday, temperature raises output by 0.41 kWh compared with 25°C air.",0.407,PASS,PASS,ok,PASS
+2023-05-31,afternoon,cloud,0.31,"In the afternoon, cloud raises output by 0.31 kWh compared with a clear sky.",0.307,PASS,PASS,ok,PASS
+2023-06-10,morning,cloud,-0.1,"In the morning, cloud lowers output by 0.10 kWh compared with a clear sky.",-0.096,PASS,PASS,ok,PASS
+2023-06-10,midday,temperature,0.51,"In the midday, temperature raises output by 0.51 kWh compared with 25°C air.",0.513,PASS,PASS,ok,PASS
+2023-06-10,afternoon,ml_correction,0.37,"In the afternoon, ml_correction raises output by 0.37 kWh compared with physics estimates.",0.37,PASS,PASS,ok,PASS
+2023-06-20,morning,cloud,-1.51,"In the morning, cloud lowers output by 1.51 kWh compared with a clear sky.",-1.778,PASS,PASS,ok,PASS
+2023-06-20,midday,cloud,-5.58,"In the midday, cloud lowers output by 5.58 kWh compared with a clear sky.",-6.196,PASS,PASS,ok,PASS
+2023-06-20,afternoon,cloud,-3.24,"In the afternoon, cloud lowers output by 3.24 kWh compared with a clear sky.",-3.604,PASS,PASS,ok,PASS
+2023-06-30,morning,cloud,-1.91,"In the morning, cloud lowers output by 1.91 kWh compared with a clear sky.",-2.148,PASS,PASS,ok,PASS
+2023-06-30,midday,cloud,-11.33,"In the midday, cloud lowers output by 11.33 kWh compared with a clear sky.",-11.333,PASS,PASS,ok,PASS
+2023-06-30,afternoon,cloud,-7.04,"In the afternoon, cloud lowers output by 7.04 kWh compared with a clear sky.",-7.042,PASS,PASS,ok,PASS
+2023-07-20,midday,temperature,0.52,"In the midday, temperature raises output by 0.52 kWh compared with 25°C air.",0.499,PASS,PASS,ok,PASS
+2023-07-20,afternoon,ml_correction,0.44,"In the afternoon, ml_correction raises output by 0.44 kWh compared with physics estimates.",0.44,PASS,PASS,ok,PASS
+2023-07-30,morning,cloud,-1.36,"In the morning, cloud lowers output by 1.36 kWh compared with a clear sky.",-1.362,PASS,PASS,ok,PASS
+2023-07-30,midday,cloud,-3.83,"In the midday, cloud lowers output by 3.83 kWh compared with a clear sky.",-3.825,PASS,PASS,ok,PASS
+2023-07-30,afternoon,cloud,-3.2,"In the afternoon, cloud lowers output by 3.20 kWh compared with a clear sky.",-3.204,PASS,PASS,ok,PASS
+2023-08-09,afternoon,cloud,0.37,"In the afternoon, cloud raises output by 0.37 kWh compared with a clear sky.",0.37,PASS,PASS,ok,PASS
+2023-08-29,morning,cloud,0.16,"In the morning, cloud raises output by 0.16 kWh compared with a clear sky.",0.136,PASS,PASS,ok,PASS
+2023-08-29,midday,cloud,0.47,"In the midday, cloud raises output by 0.47 kWh compared with a clear sky.",0.422,PASS,PASS,ok,PASS
+2023-08-29,afternoon,cloud,0.68,"In the afternoon, cloud raises output by 0.68 kWh compared with a clear sky.",0.622,PASS,PASS,ok,PASS
+2023-09-18,morning,cloud,0.14,"In the morning, cloud raises output by 0.14 kWh compared with a clear sky.",0.138,PASS,PASS,ok,PASS
+2023-09-18,midday,cloud,0.39,"In the midday, cloud raises output by 0.39 kWh compared with a clear sky.",0.316,PASS,PASS,ok,PASS
+2023-09-18,afternoon,cloud,0.64,"In the afternoon, cloud raises output by 0.64 kWh compared with a clear sky.",0.589,PASS,PASS,ok,PASS
+2023-09-28,midday,cloud,-0.42,"In the midday, cloud lowers output by 0.42 kWh compared with a clear sky.",-0.478,PASS,PASS,ok,PASS
+2023-09-28,afternoon,cloud,-0.42,"In the afternoon, cloud lowers output by 0.42 kWh compared with a clear sky.",-0.488,PASS,PASS,ok,PASS

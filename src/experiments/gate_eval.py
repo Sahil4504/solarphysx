@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.experiments.dayahead_bench import FEATS, lightgbm_models, load
+from src.experiments.dayahead_bench import FEATS, MONO, lightgbm_models, load
 from src.gate import gate as G
 
 PRED, OUT = Path("results/dayahead_gpu"), Path("results/gate")
@@ -22,6 +22,7 @@ def setup():
     d = m["derate"]
     F = {"B_physics_residual": lambda x: d * x.p_phys1.to_numpy() + m["B_resid"].predict(x[FEATS]),
          "A_lgbm_quantile": lambda x: np.median([m[q].predict(x[FEATS]) for q in ("A10", "A50", "A90")], axis=0),  # = saved P50 after de-crossing
+         **{k: (lambda x, k=k: (d * x.p_phys1.to_numpy() + m[k].predict(x[FEATS])) * (x.cs_ghi.to_numpy() > 0)) for k in MONO},
          "pvlib_physical": lambda x: d * x.p_phys1.to_numpy()}
     te = df[df.split == "test"]
     for k in F:  # refit must reproduce the benchmark forecasts exactly (LightGBM is deterministic)
@@ -45,11 +46,11 @@ def shap_phi(df, m, n_bg=100):  # shap caps interventional backgrounds at 100
     """Interventional SHAP with a same-hour background, so attributions are 'vs an average day at this hour'."""
     import shap
     te, tr = df[df.split == "test"], df[df.split == "train"]
-    phi = {"A_lgbm_quantile": [], "B_physics_residual": []}
+    phi = {"A_lgbm_quantile": [], "B_physics_residual": [], **{k: [] for k in MONO}}
     for h, x in te.groupby("hour"):
         bg = tr[tr.hour == h][FEATS].sample(min(n_bg, (tr.hour == h).sum()), random_state=0)
         # shortcut: explains the P50 model; A's forecast is the de-crossed median (identical on 92% of hours, <0.03 kW on 99%)
-        for k, model in [("A_lgbm_quantile", m["A50"]), ("B_physics_residual", m["B_resid"])]:
+        for k, model in [("A_lgbm_quantile", m["A50"]), ("B_physics_residual", m["B_resid"])] + [(k, m[k]) for k in MONO]:
             ex = shap.TreeExplainer(model, data=bg, feature_perturbation="interventional")
             # shap's own additivity check trips on rows with missing lags (LightGBM routes NaN its own way); checked below
             v = ex.shap_values(x[FEATS], check_additivity=False)
@@ -59,7 +60,10 @@ def shap_phi(df, m, n_bg=100):  # shap caps interventional backgrounds at 100
             phi[k].append(pd.DataFrame(v, index=x.index, columns=FEATS))
     phi = {k: pd.concat(v).loc[te.index] for k, v in phi.items()}
     ref_p = tr.groupby("hour").p_phys1.mean().reindex(te.hour).to_numpy()
-    phi["B_physics_residual"]["p_phys1"] += m["derate"] * (te.p_phys1.to_numpy() - ref_p)  # B's linear physics term
+    for k in ("B_physics_residual", *MONO):
+        phi[k]["p_phys1"] += m["derate"] * (te.p_phys1.to_numpy() - ref_p)  # B's linear physics term
+    for k in MONO:
+        phi[k].loc[te.cs_ghi.to_numpy() == 0] = 0.0  # masked hours: output fixed at 0, no input matters
     return phi
 
 
@@ -68,6 +72,9 @@ def stage_claims(df, m, F, phi):
     by_day = {k: g for k, g in te.groupby("day")}
     sets = {"B + physics explainer": [c for g in by_day.values() for c in G.explain_physics(g, F["B_physics_residual"], m["derate"], "B")],
             "B + SHAP": [c for g in by_day.values() for c in G.explain_shap(g, phi["B_physics_residual"], "B")],
+            **{f"{k[:2]} + {e}": [c for g in by_day.values() for c in (
+                G.explain_physics(g, F[k], m["derate"], k[:2]) if e == "physics explainer" else G.explain_shap(g, phi[k], k[:2]))]
+               for k in MONO for e in ("physics explainer", "SHAP")},
             "A + SHAP": [c for g in by_day.values() for c in G.explain_shap(g, phi["A_lgbm_quantile"], "A")]}
     return by_day, sets
 
@@ -75,7 +82,7 @@ def stage_claims(df, m, F, phi):
 def stage_verify(df, F, by_day, sets, b):
     ref = G.references(df[df.split == "train"])
     te = df[df.split == "test"]
-    fkey = {"B": "B_physics_residual", "A": "A_lgbm_quantile"}
+    fkey = {"B": "B_physics_residual", "A": "A_lgbm_quantile", **{k[:2]: k for k in MONO}}
     claims, days = [], []
     for name, cl in sets.items():
         f = F[fkey[cl[0].model]]

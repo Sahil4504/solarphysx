@@ -1,0 +1,7 @@
+[hf_Qwen2.5-3B-Instruct] days 28, claims round 0: 80, final: 66, shown (PASS): 63, rounds used mean 2.00 max 4
+         round 0 (unverified draft)  final round
+verdict                                         
+BLOCK                         0.088        0.000
+FLAG                          0.438        0.000
+INVALID                       0.025        0.045
+PASS                          0.450        0.955

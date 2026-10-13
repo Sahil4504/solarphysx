@@ -14,7 +14,8 @@ DARK, AMBER, TEAL, GREY = "#1B2A3A", "#F2A541", "#17808E", "#9AA5B1"  # same pal
 LABEL = {"persistence": "Persistence", "smart_persistence": "Smart persistence", "pvlib_physical": "pvlib physical",
          "solartrans_original": "SolarTrans (original inputs)", "A_lgbm_quantile": "A  LightGBM quantile",
          "B_physics_residual": "B  Physics + ML residual", "C_tft": "C  Temporal Fusion Transformer",
-         "D_solartrans_physics": "D  SolarTrans + physics inputs"}
+         "D_solartrans_physics": "D  SolarTrans + physics inputs", "B2_physics_constrained": "B2 B + night mask + temp. monotone",
+         "B3_fully_monotone": "B3 B + night mask + all monotone"}
 BASE = {"persistence", "smart_persistence", "pvlib_physical", "solartrans_original"}
 
 
@@ -155,7 +156,7 @@ def metrics_panels(folder=OUT):
         ax.tick_params(axis="x", labelsize=8, colors=muted)
         ax.grid(axis="x", color="#E6E6E3", lw=0.6); ax.set_axisbelow(True)
         ax.spines[["top", "right"]].set_visible(False); ax.spines[["left", "bottom"]].set_color("#C8C8C4")
-    names = [LABEL.get(f, f) + ("   ★ chosen" if f == "B_physics_residual" else "") for f in m.index]
+    names = [LABEL.get(f, f) + ("   ★ chosen" if f == "B2_physics_constrained" else "") for f in m.index]
     axs[0].set_yticks(yy, names, fontsize=9, color=ink)
     from matplotlib.patches import Patch
     fig.legend([Patch(color=blue), Patch(color=grey)], ["Candidate models", "Baselines / published reference"],

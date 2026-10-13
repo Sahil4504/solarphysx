@@ -1,0 +1,50 @@
+day,window,driver,delta_kwh,sentence,true_kwh,t2,t3,text,verdict
+2023-01-01,morning,cloud,-1.14,The forecast predicts a reduction of 1.14 kWh due to cloud cover compared to a clear sky scenario.,-1.428,PASS,PASS,ok,PASS
+2023-01-01,midday,temperature,-0.26,The forecast predicts a reduction of 0.26 kWh due to higher temperatures compared to an air temperature of 25°C.,-0.262,PASS,PASS,ok,PASS
+2023-01-01,afternoon,ml_correction,-1.07,The forecast predicts a reduction of 1.07 kWh due to learned correction factors compared to purely physical estimates.,-1.07,PASS,PASS,ok,PASS
+2023-01-11,morning,cloud,-0.1,The forecast predicts a reduction of 0.1 kWh due to cloud cover compared to a clear sky scenario.,-0.27,PASS,PASS,ok,PASS
+2023-01-11,afternoon,cloud,-4.45,The forecast shows a reduction of 4.45 kWh due to cloud cover compared to a clear sky scenario.,-4.209,PASS,PASS,ok,PASS
+2023-01-21,morning,cloud,-4.51,The forecast predicts a decrease of 4.51 kWh due to clouds compared to a clear sky.,-4.505,PASS,PASS,ok,PASS
+2023-01-21,midday,cloud,-10.67,The forecast predicts a decrease of 10.67 kWh due to clouds compared to a clear sky.,-10.667,PASS,PASS,ok,PASS
+2023-01-21,afternoon,cloud,-5.33,The forecast predicts a decrease of 5.33 kWh due to clouds compared to a clear sky.,-5.334,PASS,PASS,ok,PASS
+2023-01-31,morning,cloud,-2.22,-2.22 kWh (lower),-1.9,PASS,PASS,ok,PASS
+2023-01-31,midday,temperature,-0.34,-0.34 kWh (lower),-0.168,PASS,PASS,ok,PASS
+2023-01-31,afternoon,ml_correction,-0.37,-0.37 kWh (lower),-0.37,PASS,PASS,ok,PASS
+2023-02-20,afternoon,ml_correction,-1.05,-1.05 kWh (lowers),-1.05,PASS,PASS,ok,PASS
+2023-03-02,afternoon,ml_correction,-1.56,The forecast predicts a reduction of 1.56 kWh due to learned correction factors compared to purely physical estimates.,-1.56,PASS,PASS,ok,PASS
+2023-03-12,morning,cloud,0.14,+0.14 kWh (raises output),0.124,PASS,PASS,ok,PASS
+2023-03-22,morning,temperature,-0.16,+0.16 kWh (lower),-0.172,PASS,PASS,ok,PASS
+2023-03-22,midday,temperature,-0.79,-0.79 kWh (lower),-0.845,PASS,PASS,ok,PASS
+2023-03-22,afternoon,cloud,0.42,+0.42 kWh (raise),0.37,PASS,PASS,ok,PASS
+2023-04-01,midday,temperature,0.56,+0.56 kWh (raises),0.559,PASS,PASS,ok,PASS
+2023-04-21,afternoon,ml_correction,-0.16,-0.16 kWh (lowers),-0.16,PASS,PASS,ok,PASS
+2023-05-01,midday,temperature,0.35,+0.35 kWh (raises),0.539,PASS,PASS,ok,PASS
+2023-05-11,morning,cloud,0.07,0.07 kWh (raise),0.069,PASS,PASS,ok,PASS
+2023-05-11,midday,cloud,0.27,0.27 kWh (raise),0.273,PASS,PASS,ok,PASS
+2023-05-11,afternoon,cloud,0.53,0.53 kWh (raise),0.53,PASS,PASS,ok,PASS
+2023-05-21,morning,ml_correction,-0.18,"The forecasted output decreases by 0.18 kWh due to the cooler morning temperature compared to a clear sky, corrected by machine learning.",-0.18,PASS,PASS,ok,PASS
+2023-05-31,morning,ml_correction,0.65,+0.65 kWh (raises output),0.65,PASS,PASS,ok,PASS
+2023-05-31,midday,ml_correction,0.87,+0.87 kWh (raises output),0.87,PASS,PASS,ok,PASS
+2023-05-31,afternoon,cloud,0.33,+0.33 kWh (raises output),0.307,PASS,PASS,ok,PASS
+2023-06-10,midday,temperature,0.33,-0.33 kWh (raises),0.513,PASS,PASS,ok,PASS
+2023-06-10,afternoon,ml_correction,0.38,-0.38 kWh (raises),0.38,PASS,PASS,ok,PASS
+2023-06-30,morning,cloud,-1.91,-1.91 kWh (lower),-2.148,PASS,PASS,ok,PASS
+2023-06-30,midday,temperature,0.33,+0.33 kWh (raise),0.519,PASS,PASS,ok,PASS
+2023-06-30,afternoon,cloud,-6.81,-6.81 kWh (lower),-7.042,PASS,PASS,ok,PASS
+2023-07-10,midday,cloud,0.15,"+0.15 kWh, raises output",0.153,PASS,PASS,ok,PASS
+2023-07-10,afternoon,ml_correction,-0.18,"-0.18 kWh, lowers output",-0.18,PASS,PASS,ok,PASS
+2023-07-20,morning,ml_correction,0.39,+0.39 kWh,0.39,PASS,PASS,ok,PASS
+2023-07-20,afternoon,cloud,0.28,+0.28 kWh,0.238,PASS,PASS,ok,PASS
+2023-07-30,morning,cloud,-1.46,-1.46 kWh (lower),-1.362,PASS,PASS,ok,PASS
+2023-07-30,afternoon,ml_correction,0.94,0.94 kWh (raise),0.94,PASS,PASS,ok,PASS
+2023-08-09,afternoon,ml_correction,0.33,+0.33 kWh (raise),0.33,PASS,PASS,ok,PASS
+2023-08-19,afternoon,ml_correction,0.8,The forecast predicts an increase of 0.80 kWh due to machine learning corrections.,0.8,PASS,PASS,ok,PASS
+2023-08-29,morning,cloud,0.16,+0.16 kWh (raises output),0.136,PASS,PASS,ok,PASS
+2023-08-29,afternoon,ml_correction,0.68,+0.68 kWh (raises output),0.68,PASS,PASS,ok,PASS
+2023-09-08,morning,ml_correction,0.19,+0.19 kWh (raises output),0.19,PASS,PASS,ok,PASS
+2023-09-08,midday,ml_correction,0.37,+0.37 kWh (raises output),0.37,PASS,PASS,ok,PASS
+2023-09-08,afternoon,cloud,0.41,+0.41 kWh (raises output),0.406,PASS,PASS,ok,PASS
+2023-09-18,morning,cloud,0.14,+0.14 kWh (raises output),0.138,PASS,PASS,ok,PASS
+2023-09-18,afternoon,cloud,0.64,+0.64 kWh (raises output),0.589,PASS,PASS,ok,PASS
+2023-09-28,midday,cloud,-0.42,The forecasted output for the midday window decreases by 0.42 kWh compared to a clear sky condition due to cloud cover.,-0.478,PASS,PASS,ok,PASS
+2023-09-28,afternoon,cloud,-0.42,The forecasted output for the afternoon window decreases by 0.42 kWh compared to a clear sky condition due to cloud cover.,-0.488,PASS,PASS,ok,PASS

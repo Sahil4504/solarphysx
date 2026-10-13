@@ -20,4 +20,6 @@ dependencies:
       - ipykernel==7.4.0
       - herbie-data
       - lightgbm==4.7.0
+      - transformers==5.19.0  # agent LLM backend (src/agent)
+      - accelerate==1.15.0
       - pytorch-forecasting==1.8.0
