@@ -1,0 +1,7 @@
+,envelope,dark,ramp,daily_energy,t1_fail
+measured (reality),34.8,0.0,0.8,0.0,35.1
+B_physics_residual,0.3,18.1,0.0,0.0,18.4
+A_lgbm_quantile,0.0,0.0,0.0,0.0,0.0
+B2_physics_constrained,0.3,0.0,0.0,0.0,0.3
+B3_fully_monotone,0.3,0.0,0.0,0.0,0.3
+pvlib_physical,0.0,0.0,0.0,0.0,0.0

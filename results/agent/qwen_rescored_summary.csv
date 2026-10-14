@@ -1,0 +1,4 @@
+site,days,drafted,invalid,v1_wrong,v11_wrong,ci_lo,ci_hi,v11_flag,v11_block,copied,wrong_from_evidence,wrong_from_llm,llm_changed_pass,shown
+dkasc38,260,781,13,0.534,0.536,0.487,0.582,0.388,0.149,0.638,0.257,0.279,0.23,654
+henderson,356,1074,9,0.434,0.433,0.397,0.474,0.297,0.136,0.766,0.25,0.182,0.219,897
+golden,354,1066,11,0.502,0.499,0.47,0.532,0.476,0.023,0.902,0.438,0.061,0.375,1000

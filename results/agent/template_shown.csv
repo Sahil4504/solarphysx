@@ -1786,7 +1786,6 @@ day,window,driver,delta_kwh,sentence,true_kwh,t2,t3,text,verdict
 2023-09-19,afternoon,ml_correction,-0.52,"In the afternoon, ml correction lowers output by 0.52 kWh compared with pure physics.",-0.52,PASS,PASS,ok,PASS
 2023-09-20,morning,temperature,-0.1,"In the morning, temperature lowers output by 0.10 kWh compared with 25 °C air.",-0.07,PASS,PASS,ok,PASS
 2023-09-20,morning,ml_correction,-0.29,"In the morning, ml correction lowers output by 0.29 kWh compared with pure physics.",-0.29,PASS,PASS,ok,PASS
-2023-09-20,midday,cloud,-0.1,"In the midday, cloud lowers output by 0.10 kWh compared with a clear sky.",-0.102,PASS,PASS,ok,PASS
 2023-09-20,midday,temperature,-0.61,"In the midday, temperature lowers output by 0.61 kWh compared with 25 °C air.",-0.532,PASS,PASS,ok,PASS
 2023-09-20,midday,ml_correction,-0.45,"In the midday, ml correction lowers output by 0.45 kWh compared with pure physics.",-0.45,PASS,PASS,ok,PASS
 2023-09-20,afternoon,cloud,0.19,"In the afternoon, cloud raises output by 0.19 kWh compared with a clear sky.",0.109,PASS,PASS,ok,PASS

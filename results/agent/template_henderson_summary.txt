@@ -1,0 +1,6 @@
+[template_henderson] days 365, claims round 0: 2871, final: 2824, shown (PASS): 2824, rounds used mean 1.52 max 3
+         round 0 (unverified draft)  final round
+verdict                                         
+BLOCK                         0.002          0.0
+FLAG                          0.148          0.0
+PASS                          0.851          1.0

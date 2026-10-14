@@ -12,18 +12,19 @@ Self-check:  python -m src.gate.gate
 """
 
 from dataclasses import dataclass, asdict
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from src.data.build_dayahead import TZ, pv_unit
+import src.data.build_dayahead as BD  # BD.TZ / BD.pv_unit follow BD.use_site(): counterfactual physics uses the active site
 from src.experiments.dayahead_bench import FEATS
 
 WINDOWS = {"morning": (6, 10), "midday": (10, 14), "afternoon": (14, 19)}  # [start, end) local hours
 GROUPS = {"cloud": ["k", "tcc"], "irradiance": ["ghi_gfs", "poa_gfs", "p_phys1"], "temperature": ["t2m"],
           "yesterday": ["p_lag", "pcs_lag", "kd_lag"], "sun_geometry": ["p_cs1", "zenith", "hour"]}
 PHYSICAL = {"cloud", "irradiance", "temperature", "sun_geometry"}  # 'yesterday', 'ml_correction': correlations, not causes
-SIGN_FEATURE = {"cloud": "k", "irradiance": "p_phys1", "sun_geometry": "p_cs1"}  # more of it than the reference -> more power
+SIGN_FEATURE = {"irradiance": "p_phys1", "sun_geometry": "p_cs1"}  # more of it than the reference -> more power (cloud/temperature: physics chain)
 MATERIAL_KWH = 0.10  # claims smaller than this are not made
 TOL_ABS, TOL_REL = 0.20, 0.25  # PASS if |claimed - true| <= max(TOL_ABS, TOL_REL * |true|)
 ML_SHARE = 0.25  # ML correction above this share of the window's physics energy is flagged
@@ -58,10 +59,10 @@ def _at_hours(ref: pd.DataFrame, x: pd.DataFrame, col: str) -> np.ndarray:
 
 def _physics(x: pd.DataFrame) -> pd.DataFrame:
     """Recompute irradiance and physics power after k or t2m changed (same chain as build_dayahead)."""
-    mid = (x.index + pd.Timedelta(minutes=30)).tz_localize(TZ)
+    mid = (x.index + pd.Timedelta(minutes=30)).tz_localize(BD.TZ)
     x["ghi_gfs"] = x.k * x.cs_ghi
-    poa, p, _ = pv_unit(mid, x.ghi_gfs, x.t2m)
-    poa_cs, p_cs, _ = pv_unit(mid, x.cs_ghi, x.t2m)
+    poa, p, _ = BD.pv_unit(mid, x.ghi_gfs, x.t2m)
+    poa_cs, p_cs, _ = BD.pv_unit(mid, x.cs_ghi, x.t2m)
     x["poa_gfs"], x["p_phys1"], x["poa_cs"], x["p_cs1"] = poa.to_numpy(), p.to_numpy(), poa_cs.to_numpy(), p_cs.to_numpy()
     return x
 
@@ -145,13 +146,17 @@ def t1_output(pred: pd.Series, rows: pd.DataFrame, b: T1Bounds) -> pd.DataFrame:
 
 
 # ---------------- 2c: T2 attribution plausibility ----------------
+PHYS_SIGN_KWH = 0.05  # physics effects smaller than this (window energy, before derate) have no direction
+
+
 def sign_prior(c: Claim, rows: pd.DataFrame, ref: dict):
-    """Physically expected direction of a claim (+1/-1), or None when physics gives no direction."""
+    """Physically expected direction of a claim (+1/-1), or None when physics gives no direction.
+    v1.1: cloud and temperature follow the physics chain's own response to the same counterfactual, so geometry is
+    respected (low sun behind a tilted panel: a clearer sky can lower output; v1 assumed 'clearer always raises')."""
     r = window_rows(rows, c.window)
-    if c.driver == "temperature":  # hotter than the reference -> less power
-        t_ref = 25.0 if c.reference == "t25" else _at_hours(ref, r, "t2m")
-        diff = (r.t2m - t_ref).mean()
-        return None if abs(diff) < 1.0 else -np.sign(diff)
+    if c.driver in ("cloud", "temperature"):
+        diff = float((r.p_phys1 - counterfactual(r, c.driver, c.reference, ref).p_phys1).sum())
+        return None if abs(diff) < PHYS_SIGN_KWH else np.sign(diff)
     if c.driver in SIGN_FEATURE:  # clearer / brighter / higher sun than the reference -> more power
         f = SIGN_FEATURE[c.driver]
         x_ref = 1.0 if c.reference == "clear_sky" else _at_hours(ref, r, f)
@@ -172,11 +177,16 @@ def t2_plausibility(c: Claim, rows, ref) -> str:
 
 
 def t2_monotonicity(forecaster, rows: pd.DataFrame, dk=0.1, dt=5.0, tol=0.02) -> pd.DataFrame:
-    """Model-level: clearer sky must not lower power; hotter air must not raise it (physics-consistent nudges)."""
+    """Model-level: the model must not move against the physics chain under the same nudge (clearer sky / hotter air).
+    v1.1: a drop is only a violation where physics itself does not drop (low sun behind the panel can make a
+    clearer sky lower output); likewise a rise with hotter air only where physics does not rise."""
     base = forecaster(rows)
-    up_k = forecaster(_physics(rows.assign(k=(rows.k + dk).clip(upper=1.2))))
-    up_t = forecaster(_physics(rows.assign(t2m=rows.t2m + dt)))
-    return pd.DataFrame({"clearer_lowers": up_k < base - tol, "hotter_raises": up_t > base + tol}, index=rows.index)
+    xk = _physics(rows.assign(k=(rows.k + dk).clip(upper=1.2)))
+    xt = _physics(rows.assign(t2m=rows.t2m + dt))
+    up_k, up_t = forecaster(xk), forecaster(xt)
+    phys_k, phys_t = xk.p_phys1.to_numpy() - rows.p_phys1.to_numpy(), xt.p_phys1.to_numpy() - rows.p_phys1.to_numpy()
+    return pd.DataFrame({"clearer_lowers": (up_k < base - tol) & (phys_k >= 0),
+                         "hotter_raises": (up_t > base + tol) & (phys_t <= 0)}, index=rows.index)
 
 
 # ---------------- 2d: T3 claim truth ----------------
@@ -239,6 +249,15 @@ if __name__ == "__main__":
     assert np.allclose(phys(same), phys(r), atol=1e-6)
     mono = t2_monotonicity(phys, te[te.daytime])
     assert not mono.any().any(), mono.mean()
+    assert all(t2_plausibility(c, days[c.day], ref) != "BLOCK" for c in claims)  # physics never contradicts itself
+    # v1.1 geometry case: at a US site physics itself lowers output with a clearer sky at low sun; still no violation
+    import src.data.build_dayahead as BDS
+    us = pd.read_parquet(BDS.SITES["henderson"]["out"]) if Path(BDS.SITES["henderson"]["out"]).exists() else None
+    if us is not None:
+        BDS.use_site("henderson")
+        us = us[us.zenith < 85]
+        assert not t2_monotonicity(phys, us).any().any()
+        BDS.use_site("dkasc38")
     b = T1Bounds.calibrate(df[df.split != "test"])
     v = t1_output(te.y, te, b)  # reality on unseen days should rarely break bounds calibrated on training
     print(f"self-check ok: {len(claims)} physics claims verified exactly; bounds {b}; "

@@ -1,0 +1,18 @@
+,envelope,dark,ramp,daily_energy,t1_fail
+measured (reality),0.0,0.0,0.0,0.0,0.0
+A_lgbm_quantile,0.0,0.0,0.0,0.0,0.0
+B2_physics_constrained,0.0,0.0,0.0,0.0,0.0
+B3_fully_monotone,0.0,0.0,0.0,0.0,0.0
+B_physics_residual,0.0,15.0,0.0,0.0,15.0
+C_tft_s0,0.0,0.0,0.0,0.0,0.0
+C_tft_s1,0.0,0.4,0.0,0.0,0.4
+C_tft_s2,0.0,2.9,0.0,0.0,2.9
+D_solartrans_physics_s0,0.0,11.4,0.0,0.0,11.4
+D_solartrans_physics_s1,0.0,74.0,0.0,0.0,74.0
+D_solartrans_physics_s2,0.0,0.4,0.0,0.0,0.4
+persistence,0.0,0.0,0.0,0.0,0.0
+pvlib_physical,0.0,0.0,0.0,0.0,0.0
+smart_persistence,0.0,0.0,0.0,0.0,0.0
+solartrans_original_s0,0.0,37.4,0.0,0.0,37.4
+solartrans_original_s1,0.0,2.6,0.0,0.0,2.6
+solartrans_original_s2,0.0,74.4,0.0,0.0,74.4

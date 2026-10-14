@@ -12,7 +12,7 @@ GFS_CSV = "data/raw/gfs/gfs_0p5_alice_springs.csv"
 ACST = pd.Timedelta(hours=9, minutes=30)  # Alice Springs local time (no daylight saving), as in DKASC
 
 
-def to_3h_means(g: pd.DataFrame) -> pd.DataFrame:
+def to_3h_means(g: pd.DataFrame, offset: pd.Timedelta = ACST) -> pd.DataFrame:
     g = g.sort_values(["run_utc", "fxx"]).copy()
     prev = g.groupby("run_utc")[["fxx", "dswrf", "tcc"]].shift(1)
     six = g.fxx % 6 == 0
@@ -22,12 +22,12 @@ def to_3h_means(g: pd.DataFrame) -> pd.DataFrame:
     g = g[ok].copy()
     g["dswrf"] = g.dswrf.clip(lower=0)
     g["tcc"] = g.tcc.clip(0, 100)
-    g["valid_local"] = g.valid_utc + ACST  # end of the 3-h window, local time
+    g["valid_local"] = g.valid_utc + offset  # end of the 3-h window, local (standard) time
     return g
 
 
-def load_gfs(path: str = GFS_CSV) -> pd.DataFrame:
-    return to_3h_means(pd.read_csv(path, parse_dates=["run_utc", "valid_utc"]))
+def load_gfs(path: str = GFS_CSV, offset: pd.Timedelta = ACST) -> pd.DataFrame:
+    return to_3h_means(pd.read_csv(path, parse_dates=["run_utc", "valid_utc"]), offset)
 
 
 if __name__ == "__main__":

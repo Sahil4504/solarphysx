@@ -169,9 +169,9 @@ def hf_writer(model_id="Qwen/Qwen2.5-3B-Instruct", max_new_tokens=700):
 
 
 # ---------------- loop ----------------
-def run_day(rows, forecaster, derate, ref, writer, max_rounds=3):
+def run_day(rows, forecaster, derate, ref, writer, max_rounds=3, system=SYSTEM):
     """explain -> verify -> revise. Returns one record per claim per round, and the final shown claims."""
-    msgs = [{"role": "system", "content": SYSTEM},
+    msgs = [{"role": "system", "content": system},
             {"role": "user", "content": "Evidence for tomorrow's forecast:\n" + json.dumps(evidence(rows, forecaster, derate))}]
     log, recs = [], []
     for rnd in range(max_rounds + 1):
@@ -191,12 +191,20 @@ def run_day(rows, forecaster, derate, ref, writer, max_rounds=3):
     return log, shown
 
 
-def run(writer, every=10, max_rounds=3, name="template"):
+def run(writer, every=10, max_rounds=3, name="template", site=None):
+    """site=None: DKASC test period. site='henderson'/'golden': unseen US site (capacity-calibrated table), zero-shot:
+    models, 'average day' reference and prompt rules all from DKASC; physics follows the US site."""
     from src.experiments.gate_eval import setup
+    import src.data.build_dayahead as BD
     df, m, F = setup()
     f, d = F[FORECASTER], m["derate"]
     ref = G.references(df[df.split == "train"])
     te = df[df.split == "test"]
+    system = SYSTEM
+    if site:
+        BD.use_site(site)
+        te = pd.read_parquet(BD.SITES[site]["out"].replace(".parquet", "_cal.parquet"))
+        name, system = f"{name}_{site}", SYSTEM.replace("DKASC Alice Springs, 5.9 kW array", f"{site.title()}, USA; energies scaled to a 5.9 kW array")
     days = [g for _, g in te.groupby("day")][::every]
     OUT.mkdir(parents=True, exist_ok=True)
     lp, sp = OUT / f"{name}_log.csv", OUT / f"{name}_shown.csv"
@@ -208,7 +216,7 @@ def run(writer, every=10, max_rounds=3, name="template"):
         day = f"{rows.day.iloc[0]:%Y-%m-%d}"
         if day in done:
             continue
-        log, sh = run_day(rows, f, d, ref, writer, max_rounds)
+        log, sh = run_day(rows, f, d, ref, writer, max_rounds, system)
         logs += [{"day": day, **r} for r in log]
         shown += [{"day": day, **r} for r in sh]
         pd.DataFrame(logs).to_csv(lp, index=False); pd.DataFrame(shown).to_csv(sp, index=False)  # saved every day
@@ -272,10 +280,11 @@ if __name__ == "__main__":
     ap.add_argument("--every", type=int, default=10, help="use every n-th test day (1 = all 273)")
     ap.add_argument("--rounds", type=int, default=3)
     ap.add_argument("--selfcheck", action="store_true")
+    ap.add_argument("--site", choices=["henderson", "golden"], help="unseen US site (default: DKASC test period)")
     a = ap.parse_args()
     if a.selfcheck:
         selfcheck()
     elif a.backend == "template":
-        run(template_writer, a.every, a.rounds, "template")
+        run(template_writer, a.every, a.rounds, "template", a.site)
     else:
-        run(hf_writer(a.model), a.every, a.rounds, "hf_" + a.model.split("/")[-1])
+        run(hf_writer(a.model), a.every, a.rounds, "hf_" + a.model.split("/")[-1], a.site)

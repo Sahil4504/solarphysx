@@ -1,4 +1,4 @@
-[template] days 273, claims round 0: 1923, final: 1854, shown (PASS): 1854, rounds used mean 1.56 max 3
+[template] days 273, claims round 0: 1923, final: 1853, shown (PASS): 1853, rounds used mean 1.57 max 3
          round 0 (unverified draft)  final round
 verdict                                         
 BLOCK                         0.003          0.0

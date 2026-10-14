@@ -1,0 +1,9 @@
+constraints,rmse_kW,skill_vs_persistence,clearer_lowers_pct,hotter_raises_pct
+none (= B + mask),0.5168,0.3945,2.1878,8.0444
+t2m,0.5241,0.3859,1.8512,0.9424
+k,0.5258,0.3839,0.5049,6.9337
+tcc,0.52,0.3907,2.5581,7.9435
+k+tcc,0.5278,0.3816,1.1781,9.0205
+irradiance trio,0.5197,0.3911,1.9859,7.3376
+"root causes (k, tcc, t2m)",0.5375,0.3702,0.9424,2.5244
+all six,0.5609,0.3428,0.0,0.3029

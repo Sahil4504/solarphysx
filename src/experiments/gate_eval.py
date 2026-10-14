@@ -42,10 +42,9 @@ def stage_t1(df):
     return b, t1
 
 
-def shap_phi(df, m, n_bg=100):  # shap caps interventional backgrounds at 100
+def shap_phi(tr, te, m, n_bg=100):  # shap caps interventional backgrounds at 100
     """Interventional SHAP with a same-hour background, so attributions are 'vs an average day at this hour'."""
     import shap
-    te, tr = df[df.split == "test"], df[df.split == "train"]
     phi = {"A_lgbm_quantile": [], "B_physics_residual": [], **{k: [] for k in MONO}}
     for h, x in te.groupby("hour"):
         bg = tr[tr.hour == h][FEATS].sample(min(n_bg, (tr.hour == h).sum()), random_state=0)
@@ -67,8 +66,7 @@ def shap_phi(df, m, n_bg=100):  # shap caps interventional backgrounds at 100
     return phi
 
 
-def stage_claims(df, m, F, phi):
-    te = df[df.split == "test"]
+def stage_claims(te, m, F, phi):
     by_day = {k: g for k, g in te.groupby("day")}
     sets = {"B + physics explainer": [c for g in by_day.values() for c in G.explain_physics(g, F["B_physics_residual"], m["derate"], "B")],
             "B + SHAP": [c for g in by_day.values() for c in G.explain_shap(g, phi["B_physics_residual"], "B")],
@@ -79,9 +77,9 @@ def stage_claims(df, m, F, phi):
     return by_day, sets
 
 
-def stage_verify(df, F, by_day, sets, b):
-    ref = G.references(df[df.split == "train"])
-    te = df[df.split == "test"]
+def stage_verify(tr, te, F, by_day, sets, b, out=OUT):
+    """tr: rows that define the 'average day' reference (always DKASC train); te: rows whose explanations are verified."""
+    ref = G.references(tr)
     fkey = {"B": "B_physics_residual", "A": "A_lgbm_quantile", **{k[:2]: k for k in MONO}}
     claims, days = [], []
     for name, cl in sets.items():
@@ -90,9 +88,9 @@ def stage_verify(df, F, by_day, sets, b):
         c, d = G.verify(cl, by_day, f, ref, t1)
         claims.append(c.assign(setup=name)); days.append(d.assign(setup=name))
     claims, days = pd.concat(claims, ignore_index=True), pd.concat(days)
-    claims.to_csv(OUT / "claims.csv", index=False); days.to_csv(OUT / "days.csv")
+    claims.to_csv(out / "claims.csv", index=False); days.to_csv(out / "days.csv")
     mono = {k: G.t2_monotonicity(F[k], te[te.daytime]).mean() * 100 for k in F}
-    pd.DataFrame(mono).T.round(2).to_csv(OUT / "t2_monotonicity_pct_hours.csv")
+    pd.DataFrame(mono).T.round(2).to_csv(out / "t2_monotonicity_pct_hours.csv")
     return claims, days, pd.DataFrame(mono).T.round(2)
 
 
@@ -114,8 +112,9 @@ if __name__ == "__main__":
     df, m, F = setup()
     b, t1 = stage_t1(df)
     print(t1.to_string())
-    phi = shap_phi(df, m)
-    by_day, sets = stage_claims(df, m, F, phi)
-    claims, days, mono = stage_verify(df, F, by_day, sets, b)
+    tr, te = df[df.split == "train"], df[df.split == "test"]
+    phi = shap_phi(tr, te, m)
+    by_day, sets = stage_claims(te, m, F, phi)
+    claims, days, mono = stage_verify(tr, te, F, by_day, sets, b)
     print(mono.to_string())
     print(pd.crosstab(claims.setup, claims.verdict, normalize="index").round(3))

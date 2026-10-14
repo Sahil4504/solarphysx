@@ -1,0 +1,6 @@
+[template_golden] days 365, claims round 0: 2868, final: 2794, shown (PASS): 2794, rounds used mean 1.93 max 3
+         round 0 (unverified draft)  final round
+verdict                                         
+BLOCK                         0.009          0.0
+FLAG                          0.367          0.0
+PASS                          0.624          1.0

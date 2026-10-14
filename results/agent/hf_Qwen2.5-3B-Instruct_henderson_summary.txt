@@ -1,0 +1,7 @@
+[hf_Qwen2.5-3B-Instruct_henderson] days 365, claims round 0: 1083, final: 915, shown (PASS): 889, rounds used mean 1.87 max 4
+         round 0 (unverified draft)  final round
+verdict                                         
+BLOCK                         0.129        0.019
+FLAG                          0.301        0.002
+INVALID                       0.008        0.008
+PASS                          0.561        0.972
