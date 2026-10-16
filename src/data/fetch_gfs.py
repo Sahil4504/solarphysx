@@ -19,6 +19,7 @@ Usage (project root):
   python -m src.data.fetch_gfs --start 2022-06-01 --end 2022-06-01 --workers 1   # test (Alice Springs)
   python -m src.data.fetch_gfs --start 2021-01-01 --end 2024-02-05               # full run (resumable)
   python -m src.data.fetch_gfs --sites henderson golden --start 2022-01-25 --end 2023-02-28
+  python -m src.data.fetch_gfs --sites elb --start 2025-11-20 --end 2026-07-16           # UM-Dearborn ELB (campus array)
 """
 
 import argparse
@@ -33,7 +34,8 @@ from herbie import Herbie
 warnings.filterwarnings("ignore")  # module level so worker processes are quiet too
 
 # name: (lat, lon, GFS run hour UTC used for an 18:00-local issue)
-SITES = {"alice_springs": (-23.762, 133.875, 0), "henderson": (36.0275, -114.9215, 18), "golden": (39.742, -105.1727, 18)}
+SITES = {"alice_springs": (-23.762, 133.875, 0), "henderson": (36.0275, -114.9215, 18), "golden": (39.742, -105.1727, 18),
+         "elb": (42.3175, -83.2300, 18)}  # UM-Dearborn ELB roof; 18 UTC run is online ~17:30-18:30 EST -> issue 19:00 EST, fxx 15-36 = day D 04-01 EST
 FXX = range(15, 37, 3)
 SEARCH = ":(?:DSWRF:surface|TCDC:entire atmosphere[^:]*|TMP:2 m above ground):"  # NCEI may append "(considered as a single layer)"
 out_path = lambda site: Path(f"data/raw/gfs/gfs_0p5_{site}.csv")

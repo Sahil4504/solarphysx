@@ -13,8 +13,8 @@ from src.agent.explainer import FORECASTER, OUT, critique
 from src.gate import gate as G
 
 RUNS = {"dkasc38": "hf_Qwen2.5-3B-Instruct", "henderson": "hf_Qwen2.5-3B-Instruct_henderson",
-        "golden": "hf_Qwen2.5-3B-Instruct_golden"}
-TEMPLATE = {"dkasc38": "template", "henderson": "template_henderson", "golden": "template_golden"}
+        "golden": "hf_Qwen2.5-3B-Instruct_golden", "elb": "hf_Qwen2.5-3B-Instruct_elb"}
+TEMPLATE = {"dkasc38": "template", "henderson": "template_henderson", "golden": "template_golden", "elb": "template_elb"}
 
 
 def source(r0: pd.DataFrame, ev: pd.DataFrame) -> pd.Series:

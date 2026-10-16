@@ -1,0 +1,6 @@
+[template_elb] days 86, claims round 0: 666, final: 639, shown (PASS): 639, rounds used mean 1.70 max 2
+         round 0 (unverified draft)  final round
+verdict                                         
+BLOCK                         0.008          0.0
+FLAG                          0.257          0.0
+PASS                          0.736          1.0

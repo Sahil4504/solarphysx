@@ -51,7 +51,7 @@ def seasons(us: pd.DataFrame, folder: Path) -> pd.DataFrame:
 
 
 def figure():
-    """Skill vs persistence by season at each US site: physics only, B2 strict zero-shot, B2 + capacity calibration."""
+    """Skill vs persistence by season at each unseen site: physics only, B2 strict zero-shot, B2 + capacity calibration."""
     import matplotlib.pyplot as plt
     from src.experiments.plot_gate import INK, MUTED, S1, S2, S3, _style
     home = pd.read_csv("results/dayahead_gpu/metrics.csv", index_col=0).loc["B2_physics_constrained", "skill_vs_persistence"]
@@ -59,10 +59,13 @@ def figure():
             ("B2, strict zero-shot (nameplate)", "", "B2_physics_constrained", S1),
             ("B2 + capacity calibration", "_cal", "B2_physics_constrained", S3)]
     groups = ["Year", "DJF", "MAM", "JJA", "SON"]
-    fig, axs = plt.subplots(1, 2, figsize=(15, 4.8), sharey=True)
-    for ax, site, title in zip(axs, ["henderson", "golden"], ["Henderson NV (hot desert, like Alice Springs)",
-                                                              "Golden CO (semi-arid mountain, 1996 modules)"]):
+    fig, axs = plt.subplots(1, 3, figsize=(20, 4.8), sharey=True)
+    for ax, site, title in zip(axs, ["henderson", "golden", "elb"], ["Henderson NV (hot desert, like Alice Springs)",
+                                                                     "Golden CO (semi-arid mountain, 1996 modules)",
+                                                                     "UM-Dearborn ELB roof (Apr–Jul 2026, no nameplate yet)"]):
         for j, (lab, var, model, c) in enumerate(bars):
+            if not (OUT / f"{site}{var}" / "metrics.csv").exists():
+                continue  # ELB: no nameplate -> no strict zero-shot variant
             m = pd.read_csv(OUT / f"{site}{var}" / "metrics.csv", index_col=0).loc[model]
             s = pd.read_csv(OUT / f"{site}{var}" / "seasons.csv").query("model == @model").set_index("season").skill
             vals = [m.skill_vs_persistence, *s.reindex(groups[1:])]
@@ -70,16 +73,17 @@ def figure():
             ax.bar(x, vals, width=0.24, color=c, label=lab)
             ax.errorbar(x[0], vals[0], yerr=[[vals[0] - m.skill_ci_lo], [m.skill_ci_hi - vals[0]]], color=INK, lw=1, capsize=3)
             for xi, v in zip(x, vals):
-                ax.text(xi, v + (0.012 if v >= 0 else -0.04), f"{v:.2f}", ha="center", fontsize=7.5, color=INK)
+                if np.isfinite(v):
+                    ax.text(xi, v + (0.012 if v >= 0 else -0.04), f"{v:.2f}", ha="center", fontsize=7.5, color=INK)
         ax.axhline(home, color=MUTED, ls="--", lw=1)
         ax.text(4.45, home + 0.012, f"B2 on DKASC (home site) {home:.2f}", ha="right", fontsize=8, color=MUTED)
         ax.axhline(0, color=MUTED, lw=0.8)
-        ax.set_xticks(range(len(groups)), ["Whole year\n(95% CI)", "Dec–Feb\nwinter", "Mar–May\nspring", "Jun–Aug\nsummer", "Sep–Nov\nautumn"],
+        ax.set_xticks(range(len(groups)), ["Whole test\nperiod (95% CI)", "Dec–Feb\nwinter", "Mar–May\nspring", "Jun–Aug\nsummer", "Sep–Nov\nautumn"],
                       fontsize=8.5, color=INK)
         ax.set_title(title, fontsize=10, color=INK, loc="left"); _style(ax); ax.grid(axis="x", visible=False); ax.grid(axis="y", color="#E6E6E3", lw=0.6)
     axs[0].set_ylabel("skill vs 24-h persistence", fontsize=8.5, color=MUTED)
     fig.legend(*axs[0].get_legend_handles_labels(), loc="lower center", ncol=3, frameon=False, fontsize=8.5)
-    fig.suptitle("Zero-shot transfer: trained on Alice Springs only, tested Feb 2022 – Jan 2023 on unseen US sites", fontsize=11, color=INK, x=0.01, ha="left")
+    fig.suptitle("Zero-shot transfer: trained on Alice Springs only, tested on unseen US sites (PVDAQ: Feb 2022 – Jan 2023; ELB: Apr – Jul 2026)", fontsize=11, color=INK, x=0.01, ha="left")
     fig.tight_layout(rect=(0, 0.06, 1, 0.94))
     fig.savefig(OUT / "fig_transfer_seasons.png", dpi=180); plt.close(fig)
     print("saved", OUT / "fig_transfer_seasons.png")
@@ -128,10 +132,10 @@ if __name__ == "__main__":
         figure(); sys.exit()
     df, m, F = setup()  # DKASC models, fitted on DKASC train only (asserts they reproduce the saved DKASC forecasts)
     if sys.argv[1:2] == ["gate"]:  # python -m src.experiments.transfer_eval gate   (after the main run)
-        for site in ["henderson", "golden"]:
+        for site in ["henderson", "golden", "elb"]:
             gate_us(df, m, F, site)
         sys.exit()
-    for site in ["henderson", "golden"]:
+    for site in ["henderson", "golden", "elb"]:
         for variant in ["", "_cal"]:
             path = Path(BD.SITES[site]["out"].replace(".parquet", f"{variant}.parquet"))
             if not path.exists():

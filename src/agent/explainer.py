@@ -280,7 +280,7 @@ if __name__ == "__main__":
     ap.add_argument("--every", type=int, default=10, help="use every n-th test day (1 = all 273)")
     ap.add_argument("--rounds", type=int, default=3)
     ap.add_argument("--selfcheck", action="store_true")
-    ap.add_argument("--site", choices=["henderson", "golden"], help="unseen US site (default: DKASC test period)")
+    ap.add_argument("--site", choices=["henderson", "golden", "elb"], help="unseen site (default: DKASC test period)")
     a = ap.parse_args()
     if a.selfcheck:
         selfcheck()
