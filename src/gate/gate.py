@@ -166,9 +166,13 @@ def sign_prior(c: Claim, rows: pd.DataFrame, ref: dict):
     return None
 
 
-def t2_plausibility(c: Claim, rows, ref) -> str:
-    """BLOCK: physically wrong direction. FLAG: driver is not a physical cause. PASS otherwise."""
-    s = sign_prior(c, rows, ref)
+_NO_SIGN = object()
+
+
+def t2_plausibility(c: Claim, rows, ref, s=_NO_SIGN) -> str:
+    """BLOCK: physically wrong direction. FLAG: driver is not a physical cause. PASS otherwise.
+    s: precomputed sign_prior (robustness experiments re-score many claims for the same window and driver)."""
+    s = sign_prior(c, rows, ref) if s is _NO_SIGN else s
     if s is not None and np.sign(c.delta_kwh) != s:
         return "BLOCK"
     if c.driver == "ml_correction":  # a small learned correction is fine; a large one means the model overrides physics
@@ -196,10 +200,14 @@ def t3_truth(c: Claim, rows, forecaster, ref) -> tuple[str, float]:
     if c.driver == "ml_correction":  # read directly from the model, true by construction
         return "PASS", c.delta_kwh
     true = float((forecaster(r) - forecaster(counterfactual(r, c.driver, c.reference, ref))).sum())
-    if np.sign(true) != np.sign(c.delta_kwh) and abs(true) >= TOL_ABS:
-        return "BLOCK", true
-    ok = abs(c.delta_kwh - true) <= max(TOL_ABS, TOL_REL * abs(true))
-    return ("PASS" if ok else "FLAG"), true
+    return t3_verdict(c.delta_kwh, true), true
+
+
+def t3_verdict(delta: float, true: float, tol_abs: float = TOL_ABS, tol_rel: float = TOL_REL) -> str:
+    """BLOCK: claimed direction contradicts a material true effect. FLAG: size outside tolerance. PASS otherwise."""
+    if np.sign(true) != np.sign(delta) and abs(true) >= tol_abs:
+        return "BLOCK"
+    return "PASS" if abs(delta - true) <= max(tol_abs, tol_rel * abs(true)) else "FLAG"
 
 
 # ---------------- 2e: score + verdict ----------------

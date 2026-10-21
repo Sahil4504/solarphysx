@@ -1,6 +1,6 @@
 ,clearer_lowers,hotter_raises
 B_physics_residual,0.86,5.11
-A_lgbm_quantile,1.03,5.52
+A_lgbm_quantile,1.01,5.52
 B2_physics_constrained,0.47,0.42
 B3_fully_monotone,0.0,0.02
 pvlib_physical,0.0,0.0

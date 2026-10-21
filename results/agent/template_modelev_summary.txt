@@ -1,0 +1,6 @@
+[template_modelev] days 273, claims round 0: 1876, final: 1825, shown (PASS): 1825, rounds used mean 1.12 max 2
+         round 0 (unverified draft)  final round
+verdict                                         
+BLOCK                         0.007          0.0
+FLAG                          0.020          0.0
+PASS                          0.973          1.0

@@ -152,17 +152,22 @@ def _day_tensors(df, enc_cols, dec_cols):
     return np.stack(E), np.stack(Dd), np.stack(Y), np.stack(M), T, np.array(S)
 
 
-def solartrans(df, variant="D_solartrans_physics", seed=0, epochs=150, patience=15):
+def solartrans(df, variant="D_solartrans_physics", seed=0, epochs=150, patience=15, apply=None):
+    """apply: {results folder: day-ahead table of another site} -> zero-shot forecasts there with the DKASC-trained model
+    and DKASC normalisation (transfer_eval solartrans)."""
     import torch
     from src.models.solartrans import SolarTrans
 
     torch.manual_seed(seed); np.random.seed(seed)
     dev = "cuda" if torch.cuda.is_available() else "cpu"
-    d = df.copy()
-    d["y_obs"] = (d.y / CAP).fillna(0); d["y_missing"] = d.y.isna().astype(float)
-    doy = d.index.dayofyear
-    d["hs"], d["hc"] = np.sin(2 * np.pi * d.hour / 24), np.cos(2 * np.pi * d.hour / 24)
-    d["ds"], d["dc"] = np.sin(2 * np.pi * doy / 365.25), np.cos(2 * np.pi * doy / 365.25)
+    def feats(x):
+        x = x.copy()
+        x["y_obs"] = (x.y / CAP).fillna(0); x["y_missing"] = x.y.isna().astype(float)
+        doy = x.index.dayofyear
+        x["hs"], x["hc"] = np.sin(2 * np.pi * x.hour / 24), np.cos(2 * np.pi * x.hour / 24)
+        x["ds"], x["dc"] = np.sin(2 * np.pi * doy / 365.25), np.cos(2 * np.pi * doy / 365.25)
+        return x
+    d = feats(df)
     if variant.startswith("D"):  # physics + NWP, no calendar
         enc_cols, dec_cols = ["y_obs", "y_missing", "p_cs1", "zenith"], NWP
     else:  # as published: measured history + calendar, no weather forecast
@@ -202,6 +207,15 @@ def solartrans(df, variant="D_solartrans_physics", seed=0, epochs=150, patience=
     p = pd.DataFrame({"p50": out.ravel()}, index=pd.DatetimeIndex(np.concatenate(T), name="time"))
     print(f"{variant} seed {seed} ({dev}): stopped epoch {ep}, best val mse {best:.4f}")
     save(f"{variant}_s{seed}", p)
+    global OUT
+    home = OUT
+    for folder, other in (apply or {}).items():  # zero-shot: same weights, DKASC normalisation, other site's inputs
+        E2, D2, _, _, T2, _ = _day_tensors(feats(other), enc_cols, dec_cols)
+        with torch.no_grad():
+            o = model(t((E2 - mu_e) / sd_e), t((D2 - mu_d) / sd_d)).cpu().numpy() * CAP
+        OUT = Path(folder)
+        save(f"{variant}_s{seed}", pd.DataFrame({"p50": o.ravel()}, index=pd.DatetimeIndex(np.concatenate(T2), name="time")))
+    OUT = home
 
 
 # ---------------- scoring ----------------

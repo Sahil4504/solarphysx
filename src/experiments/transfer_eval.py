@@ -62,7 +62,7 @@ def figure():
     fig, axs = plt.subplots(1, 3, figsize=(20, 4.8), sharey=True)
     for ax, site, title in zip(axs, ["henderson", "golden", "elb"], ["Henderson NV (hot desert, like Alice Springs)",
                                                                      "Golden CO (semi-arid mountain, 1996 modules)",
-                                                                     "UM-Dearborn ELB roof (Apr–Jul 2026, no nameplate yet)"]):
+                                                                     "UM-Dearborn ELB roof (Apr–Jul 2026; capacity = max hourly output)"]):
         for j, (lab, var, model, c) in enumerate(bars):
             if not (OUT / f"{site}{var}" / "metrics.csv").exists():
                 continue  # ELB: no nameplate -> no strict zero-shot variant
@@ -131,6 +131,26 @@ if __name__ == "__main__":
     if sys.argv[1:2] == ["plot"]:
         figure(); sys.exit()
     df, m, F = setup()  # DKASC models, fitted on DKASC train only (asserts they reproduce the saved DKASC forecasts)
+    if sys.argv[1:2] == ["solartrans"]:  # GPU: python -m src.experiments.transfer_eval solartrans
+        tables = {}
+        for site in ["henderson", "golden", "elb"]:
+            for variant in ["", "_cal"]:
+                path = Path(BD.SITES[site]["out"].replace(".parquet", f"{variant}.parquet"))
+                if path.exists():
+                    tables[str(OUT / f"{site}{variant}")] = pd.read_parquet(path)
+        bench.OUT = OUT / "solartrans_dkasc_retrain"  # GPU training is not bit-reproducible: never overwrite results/dayahead_gpu
+        for seed in [0, 1, 2]:
+            for v in ["D_solartrans_physics", "solartrans_original"]:
+                bench.solartrans(df, v, seed, apply=tables)
+        for folder, us in tables.items():
+            site = Path(folder).name.replace("_cal", "")
+            BD.use_site(site)
+            us["daytime"] = us.zenith < 85
+            bench.OUT = Path(folder)
+            print(f"\n===== {Path(folder).name}: zero-shot incl. SolarTrans =====")
+            bench.summary(us)
+            print("skill vs persistence by season:\n", seasons(us, bench.OUT).round(3).to_string())
+        sys.exit()
     if sys.argv[1:2] == ["gate"]:  # python -m src.experiments.transfer_eval gate   (after the main run)
         for site in ["henderson", "golden", "elb"]:
             gate_us(df, m, F, site)

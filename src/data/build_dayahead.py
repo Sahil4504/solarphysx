@@ -29,11 +29,12 @@ SITES = {  # tilt/az: DKASC fitted in clean_dkasc; US from PVDAQ metadata (Hende
     "golden": dict(lat=39.742, lon=-105.1727, tz="Etc/GMT+7", tilt=45.0, az=158.0, kwp=6.0, pvdaq=50,
                    gfs="data/raw/gfs/gfs_0p5_golden.csv", utc=-7, span=("2022-01-24", "2023-03-02 23:55"),
                    out="data/processed/dayahead_golden.parquet"),
-    # ELB: no nameplate yet (kwp=None -> calibrated variant only). Geometry is a flat-roof prior (10 deg, south), not fitted:
+    # ELB: no nameplate exists; Prof. Bui (2026-10-19): capacity = maximum hourly output in the data (38.9 kW, 10 May 2026 11:00).
+    # Geometry unknown (Facilities has no details) -> flat-roof prior (10 deg, south), not fitted:
     # notebooks/04_eda_elb shows tilt/azimuth are only identifiable from test-window clear days. Snow covers the array
     # Dec-Feb and output per unit sunlight stays low into March (04_eda_elb sec. 5), so calibration = the first month
-    # after that (22 Mar - 21 Apr), test = the rest. Until the nameplate arrives this is the calibrated variant only.
-    "elb": dict(lat=42.3175, lon=-83.2300, tz="Etc/GMT+5", tilt=10.0, az=180.0, kwp=None,
+    # after that (22 Mar - 21 Apr) for the calibrated variant; test = the rest.
+    "elb": dict(lat=42.3175, lon=-83.2300, tz="Etc/GMT+5", tilt=10.0, az=180.0, kwp=38.9,
                 elb="data/raw/ELB data/ELB Solar Hourly.xlsx", gfs="data/raw/gfs/gfs_0p5_elb.csv", utc=-5,
                 span=("2025-11-20", "2026-07-17 23:55"), out="data/processed/dayahead_elb.parquet",
                 split={"cal": ("2026-03-22", "2026-04-21"), "test": ("2026-04-22", "2026-07-16")}),

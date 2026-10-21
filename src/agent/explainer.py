@@ -41,9 +41,19 @@ the full JSON. Drop a claim if you cannot fix it."""
 
 
 # ---------------- evidence ----------------
-def evidence(rows, forecaster, derate) -> dict:
-    """What the writer may use: per window energies, weather, and the physics chain's effect estimates."""
-    draft = {(c.window, c.driver): c.delta_kwh for c in G.explain_physics(rows, forecaster, derate, "agent")}
+EVIDENCE = "physics"  # 'model': Phase 2 ablation, cloud/temperature numbers verified on the forecaster itself (set by --evidence)
+
+
+def evidence(rows, forecaster, derate, ref=None) -> dict:
+    """What the writer may use: per window energies, weather, and effect estimates for each driver.
+    physics: the physics chain's estimates (default). model: the same claims re-measured on the forecaster by the gate's
+    counterfactual re-forecast (T3), so a writer that copies them cannot be wrong on size. Prompt and keys are unchanged,
+    so the ablation changes only the numbers."""
+    claims = G.explain_physics(rows, forecaster, derate, "agent")
+    if EVIDENCE == "model":
+        claims = [G.Claim(c.day, c.window, c.driver, c.reference, G.t3_truth(c, rows, forecaster, ref)[1], c.explainer, c.model)
+                  for c in claims]
+    draft = {(c.window, c.driver): c.delta_kwh for c in claims if abs(c.delta_kwh) >= G.MATERIAL_KWH}
     ev = {"day": f"{rows.day.iloc[0]:%Y-%m-%d}", "windows": {}}
     for w in G.WINDOWS:
         r = G.window_rows(rows, w)
@@ -154,12 +164,18 @@ def template_writer(messages) -> str:
     return json.dumps({"claims": claims})
 
 
-def hf_writer(model_id="Qwen/Qwen2.5-3B-Instruct", max_new_tokens=700):
-    """Local chat LLM via transformers, greedy decoding (deterministic, reproducible)."""
+def hf_writer(model_id="Qwen/Qwen2.5-3B-Instruct", max_new_tokens=700, four_bit=False):
+    """Local chat LLM via transformers, greedy decoding (deterministic, reproducible).
+    four_bit: NF4 weights via bitsandbytes, so a 7-8B model fits a 16 GB GPU (bf16 would need ~16 GB for weights alone)."""
     from transformers import AutoModelForCausalLM, AutoTokenizer
     import torch
     tok = AutoTokenizer.from_pretrained(model_id)
-    lm = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.bfloat16, device_map="auto")
+    quant = {}
+    if four_bit:
+        from transformers import BitsAndBytesConfig
+        quant = {"quantization_config": BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
+                                                           bnb_4bit_compute_dtype=torch.bfloat16)}
+    lm = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.bfloat16, device_map="auto", **quant)
 
     def write(messages):
         enc = tok.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt", return_dict=True).to(lm.device)
@@ -172,7 +188,7 @@ def hf_writer(model_id="Qwen/Qwen2.5-3B-Instruct", max_new_tokens=700):
 def run_day(rows, forecaster, derate, ref, writer, max_rounds=3, system=SYSTEM):
     """explain -> verify -> revise. Returns one record per claim per round, and the final shown claims."""
     msgs = [{"role": "system", "content": system},
-            {"role": "user", "content": "Evidence for tomorrow's forecast:\n" + json.dumps(evidence(rows, forecaster, derate))}]
+            {"role": "user", "content": "Evidence for tomorrow's forecast:\n" + json.dumps(evidence(rows, forecaster, derate, ref))}]
     log, recs = [], []
     for rnd in range(max_rounds + 1):
         reply = writer(msgs)
@@ -281,10 +297,14 @@ if __name__ == "__main__":
     ap.add_argument("--rounds", type=int, default=3)
     ap.add_argument("--selfcheck", action="store_true")
     ap.add_argument("--site", choices=["henderson", "golden", "elb"], help="unseen site (default: DKASC test period)")
+    ap.add_argument("--evidence", choices=["physics", "model"], default="physics", help="Phase 2 ablation: evidence numbers")
+    ap.add_argument("--4bit", dest="four_bit", action="store_true", help="load the LLM in 4-bit (7-8B models on 16 GB)")
     a = ap.parse_args()
+    EVIDENCE = a.evidence
+    tag = "" if a.evidence == "physics" else "_modelev"
     if a.selfcheck:
         selfcheck()
     elif a.backend == "template":
-        run(template_writer, a.every, a.rounds, "template", a.site)
+        run(template_writer, a.every, a.rounds, "template" + tag, a.site)
     else:
-        run(hf_writer(a.model), a.every, a.rounds, "hf_" + a.model.split("/")[-1], a.site)
+        run(hf_writer(a.model, four_bit=a.four_bit), a.every, a.rounds, "hf_" + a.model.split("/")[-1] + ("_4bit" if a.four_bit else "") + tag, a.site)
