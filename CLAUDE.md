@@ -413,13 +413,19 @@ reimplementation + Flan-T5-Base retrain) · E6 gate + risk–coverage · E7 DKAS
 on cleaned data (valid-rows protocol, train-only scaler, windows skipping invalid rows) · SHAP
 comparison layer · Gradio interface · paper writing · ramp-event count (statistical power).
 
-## 9. Immediate next steps (as of 2026-10-12, after gate v1)
-Confirmed by Sahil 10-12: issue time 18:00 ACST; forecaster = B2 (B + night mask + temperature-monotone residual; replaced B the same day).
-Gate v1: `src/gate/gate.py` (self-check `python -m src.gate.gate`), `src/experiments/gate_eval.py` (~5 min CPU), `plot_gate.py`; results `results/gate/`; summary in vault `04_Experiments/Gate v1 Results.md`.
-1. DONE 10-12: loop closed. `MONO` in dayahead_bench.py -> B2_physics_constrained (night mask + t2m monotone; skill 0.391 vs B 0.400, CI overlaps; T1 0%; BLOCK days 28.6% -> 1.8%) and B3_fully_monotone (all six; skill 0.348, significantly worse). Sweep: `python -m src.experiments.mono_ablation`. Forecaster = B2 (confirmed by Sahil 10-12). Remaining gate FLAGs = temperature-claim size -> explainer task.
-2. Agent phase 1 DONE 10-12: `src/agent/explainer.py` (--backend template|hf, --every, --rounds, --selfcheck), `src/agent/plot_agent.py`; results `results/agent/`; vault `04_Experiments/Agent Explainer.md`. Full Qwen2.5-3B run done 10-13 (273 days, ~75 min GPU): drafts 54% wrong (CI 49-59%) -> 98% PASS after loop, 654 shown. `python -m src.agent.plot_agent summary` -> fig_agent_summary.png. Run saves per day and resumes; rename hf_* files after code changes. Next: evidence ablation (model-verified effects), second LLM.
-3. US zero-shot transfer (vault `04_Experiments/US Transfer Test.md`): `python -m src.data.fetch_gfs --sites henderson golden ...`, `python -m src.data.build_dayahead henderson|golden [--calibrate]`, `python -m src.experiments.transfer_eval`. Then interval calibration; horizon selector variants; second DKASC array; tune C/D (GPU); gate on D (needs saved model).
-4. Kaggle: read the 2 new unseen-month JSONs, seeds 1-2; E4 go/no-go; systematic novelty search; retry 6 GFS failures.
+## 9. Immediate next steps (as of 2026-10-20)
+State: forecaster B2, gate v1.1, 4 test sites (DKASC, Henderson, Golden, ELB), Phase 1 + 2 done. Full summary: vault `00_Project_State/Project State Summary.md` (Where we stopped).
+Key commands (project root):
+- Tables: `python -m src.data.build_dayahead <dkasc38|henderson|golden|elb> [--calibrate]` (ELB capacity 38.9 kW = max hourly output, Prof. Bui; cal 22 Mar-21 Apr, test 22 Apr-16 Jul 2026).
+- Transfer: `python -m src.experiments.transfer_eval` | `plot` | `gate` | `solartrans` (retrains SolarTrans, applies zero-shot; DKASC retrain kept apart).
+- Gate robustness: `python -m src.experiments.gate_robustness [bases|planted|sweep|reference|figure|all]` -> results/robustness/.
+- Agent: `python -m src.agent.explainer [--backend hf] [--model Qwen/Qwen2.5-7B-Instruct --4bit] [--evidence model] [--site henderson|golden|elb] --every 1`; re-score: `python -m src.agent.rescore`.
+Next:
+1. Optional: inspect 7B sign flips (results/agent/hf_Qwen2.5-7B-Instruct_4bit*_log.csv).
+2. Formal novelty search (Scopus / IEEE Xplore); vault 05_Literature/Key Papers.md has round 1.
+3. Paper writing (journal with Prof. Bui); figure set listed in vault Project State Summary.
+4. Smaller: interval calibration, horizon selector GUI, Kaggle unseen-month JSONs, limitations list.
+Notes: Smart App Control off on the laptop (since 10-19). Cloud container cannot reach AWS (GFS) or Hugging Face; GPU / LLM runs happen on the laptop.
 
 ## 10. Advisor decisions (meeting 2026-09-24)
 **Advisor decisions (meeting 2026-09-24, recorded 2026-10-08):**
